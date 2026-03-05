@@ -2,6 +2,7 @@ package com.example.weatherforecast
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -44,6 +45,7 @@ import com.example.weatherforecast.settings.SettingsDataStore
 import com.example.weatherforecast.settings.SettingsScreen
 import com.example.weatherforecast.settings.SettingsViewModel
 import com.example.weatherforecast.settings.SettingsViewModelFactory
+import com.example.weatherforecast.settings.SettingsMapPickerScreen
 import com.example.weatherforecast.ui.theme.TestWeatherForecastTheme
 import com.google.android.gms.location.LocationServices
 import java.util.concurrent.TimeUnit
@@ -86,11 +88,23 @@ class MainActivity : ComponentActivity() {
         )[FavoritesViewModel::class.java]
 
         alertsViewModel = ViewModelProvider(
-            this, AlertsViewModelFactory(repository)
+            this, AlertsViewModelFactory(repository, applicationContext, settingsDataStore)
         )[AlertsViewModel::class.java]
 
 
         scheduleAlertWorker()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val notifPermissionLauncher = registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { }
+            if (ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
 
 
         val locationPermissionLauncher = registerForActivityResult(
@@ -169,7 +183,19 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(Screen.Settings.route) {
-                            SettingsScreen(viewModel = settingsViewModel)
+                            SettingsScreen(
+                                viewModel = settingsViewModel,
+                                onOpenMapPicker = {
+                                    navController.navigate(Screen.SettingsMapPicker.route)
+                                }
+                            )
+                        }
+
+                        composable(Screen.SettingsMapPicker.route) {
+                            SettingsMapPickerScreen(
+                                viewModel = settingsViewModel,
+                                onBack = { navController.popBackStack() }
+                            )
                         }
                     }
                 }
