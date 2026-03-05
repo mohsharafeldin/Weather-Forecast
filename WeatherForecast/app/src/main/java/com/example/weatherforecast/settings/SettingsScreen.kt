@@ -2,7 +2,10 @@ package com.example.weatherforecast.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +17,8 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel
+    viewModel: SettingsViewModel,
+    onOpenMapPicker: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -42,23 +46,26 @@ fun SettingsScreen(
 
         if (uiState.locationMode == "map") {
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = uiState.mapLat.toString(),
-                onValueChange = { lat ->
-                    lat.toDoubleOrNull()?.let { viewModel.setMapCoordinates(it, uiState.mapLon) }
-                },
-                label = { Text("Latitude") },
-                modifier = Modifier.fillMaxWidth()
+            Text(
+                text = "Lat: ${"%.4f".format(uiState.mapLat)}, Lon: ${"%.4f".format(uiState.mapLon)}",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = uiState.mapLon.toString(),
-                onValueChange = { lon ->
-                    lon.toDoubleOrNull()?.let { viewModel.setMapCoordinates(uiState.mapLat, it) }
-                },
-                label = { Text("Longitude") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Button(
+                onClick = onOpenMapPicker,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Pick on Map")
+            }
         }
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
