@@ -1,3 +1,81 @@
 <resources>
     <string name="app_name">Weather Forecast</string>
+
+    <!-- Bottom Nav -->
+    <string name="nav_home">Home</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_alerts">Alerts</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home Screen -->
+    <string name="error_title">Error</string>
+    <string name="retry">Retry</string>
+    <string name="hourly_forecast">Hourly Forecast</string>
+    <string name="five_day_forecast">5-Day Forecast</string>
+    <string name="feels_like">Feels like %1$s</string>
+    <string name="humidity">Humidity</string>
+    <string name="wind">Wind</string>
+    <string name="pressure">Pressure</string>
+    <string name="clouds">Clouds</string>
+    <string name="visibility">Visibility</string>
+    <string name="rain_probability">Rain</string>
+    <string name="wind_gust">Wind Gust</string>
+    <string name="wind_direction">Wind Dir</string>
+    <string name="sea_level_pressure">Sea Level</string>
+    <string name="ground_level_pressure">Ground Level</string>
+    <string name="sunrise">Sunrise</string>
+    <string name="sunset">Sunset</string>
+    <string name="temp_min">Min</string>
+    <string name="temp_max">Max</string>
+    <string name="weather_details">Weather Details</string>
+    <string name="sun_moon">Sun Info</string>
+    <string name="atmosphere">Atmosphere</string>
+    <string name="you_are_offline">You are offline</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="location_section">Location</string>
+    <string name="gps_option">GPS (Current Location)</string>
+    <string name="map_option">Choose from Map</string>
+    <string name="pick_on_map">Pick on Map</string>
+    <string name="temperature_unit_section">Temperature Unit</string>
+    <string name="celsius_option">Celsius (°C)</string>
+    <string name="fahrenheit_option">Fahrenheit (°F)</string>
+    <string name="kelvin_option">Kelvin (K)</string>
+    <string name="wind_speed_unit_section">Wind Speed Unit</string>
+    <string name="meter_sec_option">Meter/Sec</string>
+    <string name="miles_hour_option">Miles/Hour</string>
+    <string name="language_section">Language</string>
+    <string name="english_option">English</string>
+    <string name="arabic_option">Arabic</string>
+
+    <!-- Favorites Screen -->
+    <string name="favorite_locations_title">Favorite Locations</string>
+    <string name="no_favorites_yet">No favorite locations yet</string>
+    <string name="tap_to_add">Tap + to add one</string>
+    <string name="add_favorite">Add Favorite</string>
+    <string name="delete">Delete</string>
+
+    <!-- Alerts Screen -->
+    <string name="weather_alerts_title">Weather Alerts</string>
+    <string name="no_alerts_set">No weather alerts set</string>
+    <string name="tap_to_add_alert">Tap + to add an alert</string>
+    <string name="add_alert">Add Alert</string>
+
+    <!-- Day Detail Screen -->
+    <string name="day_detail_title">Day Details</string>
+    <string name="temperature">Temperature</string>
+    <string name="feels_like_label">Feels Like</string>
+    <string name="min_max">Min / Max</string>
+    <string name="visibility_label">Visibility</string>
+    <string name="rain_chance">Rain Chance</string>
+    <string name="back">Back</string>
+
+    <!-- Add Alert Dialog -->
+    <string name="start_time">Start Time</string>
+    <string name="end_time">End Time</string>
+    <string name="alert_type">Alert Type</string>
+    <string name="notification_option">Notification</string>
+    <string name="alarm_option">Alarm Sound</string>
+    <string name="cancel">Cancel</string>
 </resources>
