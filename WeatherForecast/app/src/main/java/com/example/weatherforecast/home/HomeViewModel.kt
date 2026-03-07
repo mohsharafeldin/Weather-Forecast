@@ -5,13 +5,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.weatherforecast.model.WeatherItem
 import com.example.weatherforecast.model.WeatherResponse
+import com.example.weatherforecast.network.ConnectivityObserver
 import com.example.weatherforecast.repository.IWeatherRepository
 import com.example.weatherforecast.settings.SettingsDataStore
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed class HomeUiState {
@@ -37,11 +40,18 @@ data class DailyForecast(
 
 class HomeViewModel(
     private val repository: IWeatherRepository,
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    val isOnline: StateFlow<Boolean> = connectivityObserver.isOnline
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     private var lastGpsLat: Double? = null
     private var lastGpsLon: Double? = null
@@ -51,14 +61,25 @@ class HomeViewModel(
             combine(
                 settingsDataStore.temperatureUnit,
                 settingsDataStore.language,
-                settingsDataStore.windSpeedUnit
-            ) { tempUnit, lang, windUnit ->
-                Triple(tempUnit, lang, windUnit)
+                settingsDataStore.windSpeedUnit,
+                settingsDataStore.locationMode,
+                settingsDataStore.mapLat,
+                settingsDataStore.mapLon
+            ) { values ->
+                values
             }.collect { _ ->
                 if (_uiState.value !is HomeUiState.Loading || lastGpsLat != null) {
                     fetchForecast(lastGpsLat, lastGpsLon)
                 }
             }
+        }
+    }
+
+    fun refreshForecast() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            fetchForecastInternal()
+            _isRefreshing.value = false
         }
     }
 
@@ -70,60 +91,77 @@ class HomeViewModel(
 
         viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
-            try {
-                val locationMode = settingsDataStore.locationMode.first()
+            fetchForecastInternal()
+        }
+    }
+
+    private suspend fun fetchForecastInternal() {
+        try {
+            val locationMode = settingsDataStore.locationMode.first()
+            val tempUnit = settingsDataStore.temperatureUnit.first()
+            val lang = settingsDataStore.language.first()
+            val windUnit = settingsDataStore.windSpeedUnit.first()
+
+            val lat: Double
+            val lon: Double
+            if (locationMode == "gps" && lastGpsLat != null && lastGpsLon != null) {
+                lat = lastGpsLat!!
+                lon = lastGpsLon!!
+            } else {
+                lat = settingsDataStore.mapLat.first()
+                lon = settingsDataStore.mapLon.first()
+            }
+
+            val response = repository.getForecast(lat, lon, tempUnit, lang)
+            repository.cacheForecast(response)
+            applyResponse(response, tempUnit, windUnit)
+        } catch (e: Exception) {
+            val cached = repository.getCachedForecast()
+            if (cached != null) {
                 val tempUnit = settingsDataStore.temperatureUnit.first()
-                val lang = settingsDataStore.language.first()
                 val windUnit = settingsDataStore.windSpeedUnit.first()
-
-                val lat: Double
-                val lon: Double
-                if (locationMode == "gps" && lastGpsLat != null && lastGpsLon != null) {
-                    lat = lastGpsLat!!
-                    lon = lastGpsLon!!
-                } else {
-                    lat = settingsDataStore.mapLat.first()
-                    lon = settingsDataStore.mapLon.first()
-                }
-
-                val response = repository.getForecast(lat, lon, tempUnit, lang)
-                val current = response.list.first()
-                val hourly = response.list.take(8)
-
-                val daily = response.list.groupBy { it.dtTxt.substring(0, 10) }
-                    .map { (date, items) ->
-                        DailyForecast(
-                            date = date,
-                            tempMin = items.minOf { it.main.tempMin },
-                            tempMax = items.maxOf { it.main.tempMax },
-                            icon = items[items.size / 2].weather.firstOrNull()?.icon ?: "01d",
-                            description = items[items.size / 2].weather.firstOrNull()?.description ?: ""
-                        )
-                    }
-
-                _uiState.value = HomeUiState.Success(
-                    weatherResponse = response,
-                    currentWeather = current,
-                    hourlyForecast = hourly,
-                    dailyForecast = daily,
-                    temperatureUnit = tempUnit,
-                    windSpeedUnit = windUnit
-                )
-            } catch (e: Exception) {
+                applyResponse(cached, tempUnit, windUnit)
+            } else {
                 _uiState.value = HomeUiState.Error(e.message ?: "Unknown error occurred")
             }
         }
+    }
+
+    private fun applyResponse(response: WeatherResponse, tempUnit: String, windUnit: String) {
+        val current = response.list.first()
+        val hourly = response.list.take(8)
+
+        val daily = response.list.groupBy { it.dtTxt.substring(0, 10) }
+            .map { (date, items) ->
+                DailyForecast(
+                    date = date,
+                    tempMin = items.minOf { it.main.tempMin },
+                    tempMax = items.maxOf { it.main.tempMax },
+                    icon = items[items.size / 2].weather.firstOrNull()?.icon ?: "01d",
+                    description = items[items.size / 2].weather.firstOrNull()?.description ?: ""
+                )
+            }
+
+        _uiState.value = HomeUiState.Success(
+            weatherResponse = response,
+            currentWeather = current,
+            hourlyForecast = hourly,
+            dailyForecast = daily,
+            temperatureUnit = tempUnit,
+            windSpeedUnit = windUnit
+        )
     }
 }
 
 class HomeViewModelFactory(
     private val repository: IWeatherRepository,
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    private val connectivityObserver: ConnectivityObserver
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
-            return HomeViewModel(repository, settingsDataStore) as T
+            return HomeViewModel(repository, settingsDataStore, connectivityObserver) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
