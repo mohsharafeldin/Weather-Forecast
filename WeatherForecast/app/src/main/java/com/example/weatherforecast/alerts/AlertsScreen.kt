@@ -13,9 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherforecast.R
 import com.example.weatherforecast.model.WeatherAlert
 import java.text.SimpleDateFormat
 import java.util.*
@@ -44,7 +46,7 @@ fun AlertsScreen(
                 onClick = { showAddDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Alert")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_alert))
             }
         }
     ) { padding ->
@@ -55,7 +57,7 @@ fun AlertsScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Weather Alerts",
+                text = stringResource(R.string.weather_alerts_title),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -76,12 +78,12 @@ fun AlertsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No weather alerts set",
+                            text = stringResource(R.string.no_alerts_set),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 16.sp
                         )
                         Text(
-                            text = "Tap + to add an alert",
+                            text = stringResource(R.string.tap_to_add_alert),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                             fontSize = 14.sp
                         )
@@ -110,7 +112,7 @@ private fun AlertItem(
     onToggle: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val dateFormat = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault())
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -155,7 +157,7 @@ private fun AlertItem(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.delete),
                     tint = MaterialTheme.colorScheme.error
                 )
             }

@@ -9,9 +9,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherforecast.R
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,16 +28,16 @@ fun AddAlertDialog(
     var startTime by remember { mutableStateOf(System.currentTimeMillis()) }
     var endTime by remember { mutableStateOf(System.currentTimeMillis() + 24 * 60 * 60 * 1000) }
     var alertType by remember { mutableStateOf("NOTIFICATION") }
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Add Weather Alert", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.add_alert), fontWeight = FontWeight.Bold)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Start Time", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(stringResource(R.string.start_time), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedButton(
                     onClick = {
                         val cal = Calendar.getInstance().apply { timeInMillis = startTime }
@@ -50,7 +52,7 @@ fun AddAlertDialog(
                                     },
                                     cal.get(Calendar.HOUR_OF_DAY),
                                     cal.get(Calendar.MINUTE),
-                                    true
+                                    false
                                 ).show()
                             },
                             cal.get(Calendar.YEAR),
@@ -64,7 +66,7 @@ fun AddAlertDialog(
                     Text(dateFormat.format(Date(startTime)))
                 }
 
-                Text("End Time", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(stringResource(R.string.end_time), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedButton(
                     onClick = {
                         val cal = Calendar.getInstance().apply { timeInMillis = endTime }
@@ -79,7 +81,7 @@ fun AddAlertDialog(
                                     },
                                     cal.get(Calendar.HOUR_OF_DAY),
                                     cal.get(Calendar.MINUTE),
-                                    true
+                                    false
                                 ).show()
                             },
                             cal.get(Calendar.YEAR),
@@ -93,29 +95,29 @@ fun AddAlertDialog(
                     Text(dateFormat.format(Date(endTime)))
                 }
 
-                Text("Alert Type", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(stringResource(R.string.alert_type), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = alertType == "NOTIFICATION",
                         onClick = { alertType = "NOTIFICATION" }
                     )
-                    Text("Notification", modifier = Modifier.padding(end = 16.dp))
+                    Text(stringResource(R.string.notification_option), modifier = Modifier.padding(end = 16.dp))
                     RadioButton(
                         selected = alertType == "ALARM",
                         onClick = { alertType = "ALARM" }
                     )
-                    Text("Alarm Sound")
+                    Text(stringResource(R.string.alarm_option))
                 }
             }
         },
         confirmButton = {
             Button(onClick = { onConfirm(startTime, endTime, alertType) }) {
-                Text("Add Alert")
+                Text(stringResource(R.string.add_alert))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

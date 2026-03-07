@@ -41,7 +41,8 @@ class AlertReceiver : BroadcastReceiver() {
                 val database = WeatherDatabase.getInstance(context)
                 val localDataSource = WeatherLocalDataSource(
                     database.favoriteLocationDao(),
-                    database.weatherAlertDao()
+                    database.weatherAlertDao(),
+                    database.cachedForecastDao()
                 )
                 val remoteDataSource = WeatherRemoteDataSource(RetrofitClient.weatherApiService)
                 val repository = WeatherRepositoryImpl(remoteDataSource, localDataSource)
@@ -82,14 +83,14 @@ class AlertReceiver : BroadcastReceiver() {
                 }
 
                 if (alertType == "ALARM") {
-                    showNotificationWithSound(context, message)
+                    AlarmSoundService.start(context, message)
                 } else {
                     showNotification(context, message)
                 }
             } catch (e: Exception) {
                 val fallbackMessage = "Weather alert triggered. Check the app for details."
                 if (alertType == "ALARM") {
-                    showNotificationWithSound(context, fallbackMessage)
+                    AlarmSoundService.start(context, fallbackMessage)
                 } else {
                     showNotification(context, fallbackMessage)
                 }

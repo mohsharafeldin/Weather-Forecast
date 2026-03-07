@@ -32,7 +32,8 @@ class WeatherAlertWorker(
             val database = WeatherDatabase.getInstance(context)
             val localDataSource = WeatherLocalDataSource(
                 database.favoriteLocationDao(),
-                database.weatherAlertDao()
+                database.weatherAlertDao(),
+                database.cachedForecastDao()
             )
             val remoteDataSource = WeatherRemoteDataSource(RetrofitClient.weatherApiService)
             val repository = WeatherRepositoryImpl(remoteDataSource, localDataSource)
@@ -91,7 +92,7 @@ class WeatherAlertWorker(
                     if (alert.startTime <= currentTime && alert.endTime >= currentTime) {
                         val message = alertMessages.joinToString("\n")
                         if (alert.alertType == "ALARM") {
-                            showNotificationWithSound(message)
+                            AlarmSoundService.start(context, message)
                         } else {
                             showNotification(message)
                         }
