@@ -1,6 +1,7 @@
 package com.example.weatherforecast
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -33,14 +34,17 @@ import com.example.weatherforecast.favorites.FavoritesScreen
 import com.example.weatherforecast.favorites.FavoritesViewModel
 import com.example.weatherforecast.favorites.FavoritesViewModelFactory
 import com.example.weatherforecast.favorites.MapPickerScreen
+import com.example.weatherforecast.home.DayDetailScreen
 import com.example.weatherforecast.home.HomeScreen
 import com.example.weatherforecast.home.HomeViewModel
 import com.example.weatherforecast.home.HomeViewModelFactory
 import com.example.weatherforecast.navigation.BottomNavBar
 import com.example.weatherforecast.navigation.Screen
+import com.example.weatherforecast.network.ConnectivityObserver
 import com.example.weatherforecast.network.RetrofitClient
 import com.example.weatherforecast.repository.IWeatherRepository
 import com.example.weatherforecast.repository.WeatherRepositoryImpl
+import com.example.weatherforecast.settings.LocaleHelper
 import com.example.weatherforecast.settings.SettingsDataStore
 import com.example.weatherforecast.settings.SettingsScreen
 import com.example.weatherforecast.settings.SettingsViewModel
@@ -48,6 +52,7 @@ import com.example.weatherforecast.settings.SettingsViewModelFactory
 import com.example.weatherforecast.settings.SettingsMapPickerScreen
 import com.example.weatherforecast.ui.theme.TestWeatherForecastTheme
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
@@ -60,23 +65,42 @@ class MainActivity : ComponentActivity() {
     private lateinit var favoritesViewModel: FavoritesViewModel
     private lateinit var alertsViewModel: AlertsViewModel
 
+    override fun attachBaseContext(newBase: Context?) {
+        if (newBase != null) {
+            val prefs = newBase.getSharedPreferences("language_prefs", Context.MODE_PRIVATE)
+            val lang = prefs.getString("language", "en") ?: "en"
+            val context = LocaleHelper.setLocale(newBase, lang)
+            super.attachBaseContext(context)
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        settingsDataStore = SettingsDataStore(this)
+        val prefs = getSharedPreferences("language_prefs", Context.MODE_PRIVATE)
+        val lang = prefs.getString("language", "en") ?: "en"
+        LocaleHelper.setLocale(this, lang)
+        runBlocking { settingsDataStore.setLanguage(lang) }
 
 
         val database = WeatherDatabase.getInstance(this)
         val remoteDataSource = WeatherRemoteDataSource(RetrofitClient.weatherApiService)
         val localDataSource = WeatherLocalDataSource(
             database.favoriteLocationDao(),
-            database.weatherAlertDao()
+            database.weatherAlertDao(),
+            database.cachedForecastDao()
         )
         repository = WeatherRepositoryImpl(remoteDataSource, localDataSource)
-        settingsDataStore = SettingsDataStore(this)
 
+
+        val connectivityObserver = ConnectivityObserver(this)
 
         homeViewModel = ViewModelProvider(
-            this, HomeViewModelFactory(repository, settingsDataStore)
+            this, HomeViewModelFactory(repository, settingsDataStore, connectivityObserver)
         )[HomeViewModel::class.java]
 
         settingsViewModel = ViewModelProvider(
@@ -134,7 +158,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable(Screen.Home.route) {
-                            HomeScreen(viewModel = homeViewModel)
+                            HomeScreen(
+                                viewModel = homeViewModel,
+                                onDayClick = { date ->
+                                    navController.navigate(Screen.DayDetail.createRoute(date))
+                                }
+                            )
                         }
 
                         composable(Screen.Favorites.route) {
@@ -143,10 +172,10 @@ class MainActivity : ComponentActivity() {
                                 onAddClick = {
                                     navController.navigate(Screen.MapPicker.route)
                                 },
-                                onFavoriteClick = { lat, lon, name ->
-                                    favoritesViewModel.loadFavoriteDetail(lat, lon)
+                                onFavoriteClick = { id, name ->
+                                    favoritesViewModel.loadFavoriteDetail(id)
                                     navController.navigate(
-                                        Screen.FavoriteDetail.createRoute(lat, lon, name)
+                                        Screen.FavoriteDetail.createRoute(id, name)
                                     )
                                 }
                             )
@@ -165,8 +194,7 @@ class MainActivity : ComponentActivity() {
                         composable(
                             route = Screen.FavoriteDetail.route,
                             arguments = listOf(
-                                navArgument("lat") { type = NavType.StringType },
-                                navArgument("lon") { type = NavType.StringType },
+                                navArgument("id") { type = NavType.IntType },
                                 navArgument("name") { type = NavType.StringType }
                             )
                         ) { backStackEntry ->
@@ -174,12 +202,43 @@ class MainActivity : ComponentActivity() {
                             FavoriteDetailScreen(
                                 locationName = name,
                                 viewModel = favoritesViewModel,
+                                onBack = { navController.popBackStack() },
+                                onDayClick = { date ->
+                                    navController.navigate(Screen.FavoriteDayDetail.createRoute(date))
+                                }
+                            )
+                        }
+
+                        composable(
+                            route = Screen.FavoriteDayDetail.route,
+                            arguments = listOf(
+                                navArgument("date") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val date = backStackEntry.arguments?.getString("date") ?: ""
+                            com.example.weatherforecast.favorites.FavoriteDayDetailScreen(
+                                date = date,
+                                viewModel = favoritesViewModel,
                                 onBack = { navController.popBackStack() }
                             )
                         }
 
                         composable(Screen.Alerts.route) {
                             AlertsScreen(viewModel = alertsViewModel)
+                        }
+
+                        composable(
+                            route = Screen.DayDetail.route,
+                            arguments = listOf(
+                                navArgument("date") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val date = backStackEntry.arguments?.getString("date") ?: ""
+                            DayDetailScreen(
+                                date = date,
+                                viewModel = homeViewModel,
+                                onBack = { navController.popBackStack() }
+                            )
                         }
 
                         composable(Screen.Settings.route) {
