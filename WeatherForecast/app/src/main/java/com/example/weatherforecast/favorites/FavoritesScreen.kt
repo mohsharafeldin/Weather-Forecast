@@ -16,9 +16,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherforecast.R
 import com.example.weatherforecast.model.FavoriteLocation
 
 
@@ -26,7 +28,7 @@ import com.example.weatherforecast.model.FavoriteLocation
 fun FavoritesScreen(
     viewModel: FavoritesViewModel,
     onAddClick: () -> Unit,
-    onFavoriteClick: (lat: Double, lon: Double, name: String) -> Unit
+    onFavoriteClick: (id: Int, name: String) -> Unit
 ) {
     val favorites by viewModel.favorites.collectAsState()
 
@@ -36,7 +38,7 @@ fun FavoritesScreen(
                 onClick = onAddClick,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Favorite")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_favorite))
             }
         }
     ) { padding ->
@@ -47,7 +49,7 @@ fun FavoritesScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Favorite Locations",
+                text = stringResource(R.string.favorite_locations_title),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -68,12 +70,12 @@ fun FavoritesScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No favorite locations yet",
+                            text = stringResource(R.string.no_favorites_yet),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontSize = 16.sp
                         )
                         Text(
-                            text = "Tap + to add one",
+                            text = stringResource(R.string.tap_to_add),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                             fontSize = 14.sp
                         )
@@ -86,7 +88,7 @@ fun FavoritesScreen(
                     items(favorites, key = { it.id }) { location ->
                         FavoriteLocationItem(
                             location = location,
-                            onClick = { onFavoriteClick(location.latitude, location.longitude, location.name) },
+                            onClick = { onFavoriteClick(location.id, location.name) },
                             onDelete = { viewModel.removeFavorite(location) }
                         )
                     }
@@ -141,7 +143,7 @@ private fun FavoriteLocationItem(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.delete),
                     tint = MaterialTheme.colorScheme.error
                 )
             }

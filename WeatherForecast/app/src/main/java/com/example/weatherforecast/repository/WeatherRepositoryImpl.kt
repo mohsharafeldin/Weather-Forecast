@@ -2,9 +2,11 @@ package com.example.weatherforecast.repository
 
 import com.example.weatherforecast.datasource.local.IWeatherLocalDataSource
 import com.example.weatherforecast.datasource.remote.IWeatherRemoteDataSource
+import com.example.weatherforecast.model.CachedForecast
 import com.example.weatherforecast.model.FavoriteLocation
 import com.example.weatherforecast.model.WeatherAlert
 import com.example.weatherforecast.model.WeatherResponse
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 
 class WeatherRepositoryImpl(
@@ -15,6 +17,8 @@ class WeatherRepositoryImpl(
     companion object {
         const val API_KEY ="062593663b89ef55f2f612b4d06a86bc"
     }
+
+    private val gson = Gson()
 
     override suspend fun getForecast(
         lat: Double,
@@ -30,6 +34,9 @@ class WeatherRepositoryImpl(
 
     override suspend fun addFavorite(location: FavoriteLocation) =
         localDataSource.addFavorite(location)
+
+    override suspend fun updateFavorite(location: FavoriteLocation) =
+        localDataSource.updateFavorite(location)
 
     override suspend fun removeFavorite(location: FavoriteLocation) =
         localDataSource.removeFavorite(location)
@@ -51,4 +58,22 @@ class WeatherRepositoryImpl(
 
     override suspend fun getActiveAlerts(currentTime: Long): List<WeatherAlert> =
         localDataSource.getActiveAlerts(currentTime)
+
+    override suspend fun cacheForecast(response: WeatherResponse) {
+        val json = gson.toJson(response)
+        val cached = CachedForecast(
+            responseJson = json,
+            lastUpdated = System.currentTimeMillis()
+        )
+        localDataSource.cacheForecast(cached)
+    }
+
+    override suspend fun getCachedForecast(): WeatherResponse? {
+        val cached = localDataSource.getCachedForecast() ?: return null
+        return try {
+            gson.fromJson(cached.responseJson, WeatherResponse::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

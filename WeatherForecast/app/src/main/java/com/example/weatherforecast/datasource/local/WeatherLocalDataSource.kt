@@ -1,5 +1,6 @@
 package com.example.weatherforecast.datasource.local
 
+import com.example.weatherforecast.model.CachedForecast
 import com.example.weatherforecast.model.FavoriteLocation
 import com.example.weatherforecast.model.WeatherAlert
 import kotlinx.coroutines.flow.Flow
@@ -7,7 +8,8 @@ import kotlinx.coroutines.flow.Flow
 
 class WeatherLocalDataSource(
     private val favoriteLocationDao: FavoriteLocationDao,
-    private val weatherAlertDao: WeatherAlertDao
+    private val weatherAlertDao: WeatherAlertDao,
+    private val cachedForecastDao: CachedForecastDao
 ) : IWeatherLocalDataSource {
 
 
@@ -16,6 +18,9 @@ class WeatherLocalDataSource(
 
     override suspend fun addFavorite(location: FavoriteLocation) =
         favoriteLocationDao.insert(location)
+
+    override suspend fun updateFavorite(location: FavoriteLocation) =
+        favoriteLocationDao.update(location)
 
     override suspend fun removeFavorite(location: FavoriteLocation) =
         favoriteLocationDao.delete(location)
@@ -38,4 +43,10 @@ class WeatherLocalDataSource(
 
     override suspend fun getActiveAlerts(currentTime: Long): List<WeatherAlert> =
         weatherAlertDao.getActiveAlerts(currentTime)
+
+    override suspend fun cacheForecast(forecast: CachedForecast) =
+        cachedForecastDao.insertForecast(forecast)
+
+    override suspend fun getCachedForecast(): CachedForecast? =
+        cachedForecastDao.getCachedForecast()
 }

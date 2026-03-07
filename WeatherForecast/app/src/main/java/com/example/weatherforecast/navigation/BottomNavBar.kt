@@ -9,12 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.weatherforecast.R
 
 
 data class BottomNavItem(
-    val label: String,
+    val labelResId: Int,
     val icon: ImageVector,
     val route: String
 )
@@ -23,10 +25,10 @@ data class BottomNavItem(
 @Composable
 fun BottomNavBar(navController: NavController) {
     val items = listOf(
-        BottomNavItem("Home", Icons.Default.Home, Screen.Home.route),
-        BottomNavItem("Favorites", Icons.Default.Favorite, Screen.Favorites.route),
-        BottomNavItem("Alerts", Icons.Default.Notifications, Screen.Alerts.route),
-        BottomNavItem("Settings", Icons.Default.Settings, Screen.Settings.route)
+        BottomNavItem(R.string.nav_home, Icons.Default.Home, Screen.Home.route),
+        BottomNavItem(R.string.nav_favorites, Icons.Default.Favorite, Screen.Favorites.route),
+        BottomNavItem(R.string.nav_alerts, Icons.Default.Notifications, Screen.Alerts.route),
+        BottomNavItem(R.string.nav_settings, Icons.Default.Settings, Screen.Settings.route)
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -34,9 +36,10 @@ fun BottomNavBar(navController: NavController) {
 
     NavigationBar {
         items.forEach { item ->
+            val label = stringResource(item.labelResId)
             NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label) },
+                icon = { Icon(item.icon, contentDescription = label) },
+                label = { Text(label) },
                 selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {

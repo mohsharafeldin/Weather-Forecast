@@ -16,6 +16,7 @@ interface IWeatherRepository {
 
     fun getAllFavorites(): Flow<List<FavoriteLocation>>
     suspend fun addFavorite(location: FavoriteLocation)
+    suspend fun updateFavorite(location: FavoriteLocation)
     suspend fun removeFavorite(location: FavoriteLocation)
     suspend fun getFavoriteById(id: Int): FavoriteLocation?
 
@@ -24,4 +25,7 @@ interface IWeatherRepository {
     suspend fun removeAlert(alert: WeatherAlert)
     suspend fun updateAlert(alert: WeatherAlert)
     suspend fun getActiveAlerts(currentTime: Long): List<WeatherAlert>
+
+    suspend fun cacheForecast(response: WeatherResponse)
+    suspend fun getCachedForecast(): WeatherResponse?
 }

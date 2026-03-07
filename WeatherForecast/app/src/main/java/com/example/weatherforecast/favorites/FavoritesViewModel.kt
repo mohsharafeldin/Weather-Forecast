@@ -45,15 +45,41 @@ class FavoritesViewModel(
         }
     }
 
-    fun loadFavoriteDetail(lat: Double, lon: Double) {
+    fun loadFavoriteDetail(id: Int) {
         viewModelScope.launch {
             _detailState.value = FavoriteDetailState.Loading
             try {
+                val location = repository.getFavoriteById(id)
+                if (location == null) {
+                    _detailState.value = FavoriteDetailState.Error("Favorite location not found")
+                    return@launch
+                }
+
                 val tempUnit = settingsDataStore.temperatureUnit.first()
                 val lang = settingsDataStore.language.first()
                 val windUnit = settingsDataStore.windSpeedUnit.first()
-                val response = repository.getForecast(lat, lon, tempUnit, lang)
-                _detailState.value = FavoriteDetailState.Success(response, tempUnit, windUnit)
+
+                try {
+                    val response = repository.getForecast(location.latitude, location.longitude, tempUnit, lang)
+                    
+                    val gson = com.google.gson.Gson()
+                    val updatedLocation = location.copy(cachedResponseJson = gson.toJson(response))
+                    repository.updateFavorite(updatedLocation)
+                    
+                    _detailState.value = FavoriteDetailState.Success(response, tempUnit, windUnit)
+                } catch (e: Exception) {
+                    if (location.cachedResponseJson != null) {
+                        try {
+                            val gson = com.google.gson.Gson()
+                            val cachedResponse = gson.fromJson(location.cachedResponseJson, WeatherResponse::class.java)
+                            _detailState.value = FavoriteDetailState.Success(cachedResponse, tempUnit, windUnit)
+                        } catch (parseEx: Exception) {
+                            _detailState.value = FavoriteDetailState.Error("Failed to parse cached data")
+                        }
+                    } else {
+                        _detailState.value = FavoriteDetailState.Error(e.message ?: "You are offline and no cached data is available")
+                    }
+                }
             } catch (e: Exception) {
                 _detailState.value = FavoriteDetailState.Error(e.message ?: "Error loading forecast")
             }
