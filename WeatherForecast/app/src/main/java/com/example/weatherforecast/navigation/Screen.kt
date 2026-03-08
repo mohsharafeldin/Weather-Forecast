@@ -2,6 +2,7 @@ package com.example.weatherforecast.navigation
 
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
     object Home : Screen("home")
     object Favorites : Screen("favorites")
     object MapPicker : Screen("map_picker")

@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.work.*
@@ -36,6 +37,7 @@ import com.example.weatherforecast.favorites.FavoritesViewModelFactory
 import com.example.weatherforecast.favorites.MapPickerScreen
 import com.example.weatherforecast.home.DayDetailScreen
 import com.example.weatherforecast.home.HomeScreen
+import com.example.weatherforecast.splash.SplashScreen
 import com.example.weatherforecast.home.HomeViewModel
 import com.example.weatherforecast.home.HomeViewModelFactory
 import com.example.weatherforecast.navigation.BottomNavBar
@@ -147,16 +149,26 @@ class MainActivity : ComponentActivity() {
         setContent {
             TestWeatherForecastTheme {
                 val navController = rememberNavController()
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    bottomBar = { BottomNavBar(navController) }
+                    bottomBar = {
+                        if (currentRoute != Screen.Splash.route) {
+                            BottomNavBar(navController)
+                        }
+                    }
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = Screen.Home.route,
+                        startDestination = Screen.Splash.route,
                         modifier = Modifier.padding(innerPadding)
                     ) {
+                        composable(Screen.Splash.route) {
+                            SplashScreen(navController = navController)
+                        }
+
                         composable(Screen.Home.route) {
                             HomeScreen(
                                 viewModel = homeViewModel,

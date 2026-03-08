@@ -86,6 +86,9 @@ dependencies {
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
 
+    // Lottie
+    implementation(libs.lottie.compose)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
