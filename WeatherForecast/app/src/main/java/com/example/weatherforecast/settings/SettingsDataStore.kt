@@ -23,6 +23,7 @@ class SettingsDataStore(private val context: Context) {
         val LOCATION_MODE = stringPreferencesKey("location_mode")       
         val MAP_LAT = doublePreferencesKey("map_lat")
         val MAP_LON = doublePreferencesKey("map_lon")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
     }
 
     val temperatureUnit: Flow<String> = context.dataStore.data.map { prefs ->
@@ -49,6 +50,10 @@ class SettingsDataStore(private val context: Context) {
         prefs[MAP_LON] ?: 31.2357
     }
 
+    val themeMode: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[THEME_MODE] ?: "system"
+    }
+
     suspend fun setTemperatureUnit(unit: String) {
         context.dataStore.edit { prefs -> prefs[TEMPERATURE_UNIT] = unit }
     }
@@ -70,5 +75,9 @@ class SettingsDataStore(private val context: Context) {
             prefs[MAP_LAT] = lat
             prefs[MAP_LON] = lon
         }
+    }
+
+    suspend fun setThemeMode(mode: String) {
+        context.dataStore.edit { prefs -> prefs[THEME_MODE] = mode }
     }
 }

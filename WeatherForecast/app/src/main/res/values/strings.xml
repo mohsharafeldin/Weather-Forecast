@@ -1,13 +1,11 @@
 <resources>
     <string name="app_name">Weather Forecast</string>
 
-    <!-- Bottom Nav -->
     <string name="nav_home">Home</string>
     <string name="nav_favorites">Favorites</string>
     <string name="nav_alerts">Alerts</string>
     <string name="nav_settings">Settings</string>
 
-    <!-- Home Screen -->
     <string name="error_title">Error</string>
     <string name="retry">Retry</string>
     <string name="hourly_forecast">Hourly Forecast</string>
@@ -32,7 +30,6 @@
     <string name="atmosphere">Atmosphere</string>
     <string name="you_are_offline">You are offline</string>
 
-    <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="location_section">Location</string>
     <string name="gps_option">GPS (Current Location)</string>
@@ -48,21 +45,22 @@
     <string name="language_section">Language</string>
     <string name="english_option">English</string>
     <string name="arabic_option">Arabic</string>
+    <string name="theme_section">App Theme</string>
+    <string name="system_default_option">System Default</string>
+    <string name="light_mode_option">Light Mode</string>
+    <string name="dark_mode_option">Dark Mode</string>
 
-    <!-- Favorites Screen -->
     <string name="favorite_locations_title">Favorite Locations</string>
     <string name="no_favorites_yet">No favorite locations yet</string>
     <string name="tap_to_add">Tap + to add one</string>
     <string name="add_favorite">Add Favorite</string>
     <string name="delete">Delete</string>
 
-    <!-- Alerts Screen -->
     <string name="weather_alerts_title">Weather Alerts</string>
     <string name="no_alerts_set">No weather alerts set</string>
     <string name="tap_to_add_alert">Tap + to add an alert</string>
     <string name="add_alert">Add Alert</string>
 
-    <!-- Day Detail Screen -->
     <string name="day_detail_title">Day Details</string>
     <string name="temperature">Temperature</string>
     <string name="feels_like_label">Feels Like</string>
@@ -71,11 +69,15 @@
     <string name="rain_chance">Rain Chance</string>
     <string name="back">Back</string>
 
-    <!-- Add Alert Dialog -->
     <string name="start_time">Start Time</string>
     <string name="end_time">End Time</string>
     <string name="alert_type">Alert Type</string>
     <string name="notification_option">Notification</string>
     <string name="alarm_option">Alarm Sound</string>
     <string name="cancel">Cancel</string>
+
+    <string name="confirm_delete_title">Confirm Delete</string>
+    <string name="confirm_delete_favorite_message">Are you sure you want to remove this location from favorites?</string>
+    <string name="confirm_delete_alert_message">Are you sure you want to delete this alert?</string>
+    <string name="confirm">Delete</string>
 </resources>

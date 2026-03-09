@@ -31,6 +31,37 @@ fun FavoritesScreen(
     onFavoriteClick: (id: Int, name: String) -> Unit
 ) {
     val favorites by viewModel.favorites.collectAsState()
+    var locationToDelete by remember { mutableStateOf<FavoriteLocation?>(null) }
+
+    locationToDelete?.let { location ->
+        AlertDialog(
+            onDismissRequest = { locationToDelete = null },
+            title = {
+                Text(text = stringResource(R.string.confirm_delete_title))
+            },
+            text = {
+                Text(text = stringResource(R.string.confirm_delete_favorite_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.removeFavorite(location)
+                        locationToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { locationToDelete = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -89,7 +120,7 @@ fun FavoritesScreen(
                         FavoriteLocationItem(
                             location = location,
                             onClick = { onFavoriteClick(location.id, location.name) },
-                            onDelete = { viewModel.removeFavorite(location) }
+                            onDelete = { locationToDelete = location }
                         )
                     }
                 }
@@ -107,9 +138,13 @@ private fun FavoriteLocationItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
@@ -129,8 +164,8 @@ private fun FavoriteLocationItem(
                 Column {
                     Text(
                         text = location.name,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(

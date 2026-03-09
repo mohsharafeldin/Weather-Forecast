@@ -14,7 +14,8 @@ data class SettingsUiState(
     val language: String = "en",
     val locationMode: String = "gps",
     val mapLat: Double = 30.0444,
-    val mapLon: Double = 31.2357
+    val mapLon: Double = 31.2357,
+    val themeMode: String = "system"
 )
 
 class SettingsViewModel(
@@ -55,6 +56,11 @@ class SettingsViewModel(
                 _uiState.value = _uiState.value.copy(mapLon = lon)
             }
         }
+        viewModelScope.launch {
+            settingsDataStore.themeMode.collect { mode ->
+                _uiState.value = _uiState.value.copy(themeMode = mode)
+            }
+        }
     }
 
     fun setTemperatureUnit(unit: String) {
@@ -75,6 +81,10 @@ class SettingsViewModel(
 
     fun setMapCoordinates(lat: Double, lon: Double) {
         viewModelScope.launch { settingsDataStore.setMapCoordinates(lat, lon) }
+    }
+
+    fun setThemeMode(mode: String) {
+        viewModelScope.launch { settingsDataStore.setThemeMode(mode) }
     }
 }
 

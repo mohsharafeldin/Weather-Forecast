@@ -42,11 +42,11 @@ fun SettingsScreen(
         )
 
 
-        SettingsSectionTitle(stringResource(R.string.location_section))
+        SettingsSectionTitle(stringResource(R.string.location_section), "📍")
         SettingsRadioGroup(
             options = listOf(
-                "gps" to stringResource(R.string.gps_option),
-                "map" to stringResource(R.string.map_option)
+                Triple("gps", stringResource(R.string.gps_option), "🛰️"),
+                Triple("map", stringResource(R.string.map_option), "🗺️")
             ),
             selected = uiState.locationMode,
             onSelected = { viewModel.setLocationMode(it) }
@@ -79,12 +79,12 @@ fun SettingsScreen(
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
 
-        SettingsSectionTitle(stringResource(R.string.temperature_unit_section))
+        SettingsSectionTitle(stringResource(R.string.temperature_unit_section), "🌡️")
         SettingsRadioGroup(
             options = listOf(
-                "metric" to stringResource(R.string.celsius_option),
-                "imperial" to stringResource(R.string.fahrenheit_option),
-                "standard" to stringResource(R.string.kelvin_option)
+                Triple("metric", stringResource(R.string.celsius_option), "°C"),
+                Triple("imperial", stringResource(R.string.fahrenheit_option), "°F"),
+                Triple("standard", stringResource(R.string.kelvin_option), " K")
             ),
             selected = uiState.temperatureUnit,
             onSelected = { viewModel.setTemperatureUnit(it) }
@@ -93,11 +93,11 @@ fun SettingsScreen(
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
 
-        SettingsSectionTitle(stringResource(R.string.wind_speed_unit_section))
+        SettingsSectionTitle(stringResource(R.string.wind_speed_unit_section), "🌀")
         SettingsRadioGroup(
             options = listOf(
-                "m/s" to stringResource(R.string.meter_sec_option),
-                "mph" to stringResource(R.string.miles_hour_option)
+                Triple("m/s", stringResource(R.string.meter_sec_option), "🌬️"),
+                Triple("mph", stringResource(R.string.miles_hour_option), "💨")
             ),
             selected = uiState.windSpeedUnit,
             onSelected = { viewModel.setWindSpeedUnit(it) }
@@ -105,12 +105,24 @@ fun SettingsScreen(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-
-        SettingsSectionTitle(stringResource(R.string.language_section))
+        SettingsSectionTitle(stringResource(R.string.theme_section), "🎨")
         SettingsRadioGroup(
             options = listOf(
-                "en" to stringResource(R.string.english_option),
-                "ar" to stringResource(R.string.arabic_option)
+                Triple("system", stringResource(R.string.system_default_option), "⚙️"),
+                Triple("light", stringResource(R.string.light_mode_option), "☀️"),
+                Triple("dark", stringResource(R.string.dark_mode_option), "🌙")
+            ),
+            selected = uiState.themeMode,
+            onSelected = { viewModel.setThemeMode(it) }
+        )
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+        SettingsSectionTitle(stringResource(R.string.language_section), "🌍")
+        SettingsRadioGroup(
+            options = listOf(
+                Triple("en", stringResource(R.string.english_option), "🇺🇸"),
+                Triple("ar", stringResource(R.string.arabic_option), "🇪🇬")
             ),
             selected = uiState.language,
             onSelected = { lang ->
@@ -127,36 +139,50 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsSectionTitle(title: String) {
-    Text(
-        text = title,
-        fontSize = 18.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
+private fun SettingsSectionTitle(title: String, icon: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
+        Text(text = icon, fontSize = 24.sp)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
 }
 
 @Composable
 private fun SettingsRadioGroup(
-    options: List<Pair<String, String>>,
+    options: List<Triple<String, String, String>>,
     selected: String,
     onSelected: (String) -> Unit
 ) {
-    Column {
-        options.forEach { (value, label) ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                RadioButton(
-                    selected = selected == value,
-                    onClick = { onSelected(value) }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = label, fontSize = 16.sp)
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp)) {
+            options.forEach { (value, label, icon) ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
+                    RadioButton(
+                        selected = selected == value,
+                        onClick = { onSelected(value) }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = icon, fontSize = 20.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = label, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                }
             }
         }
     }

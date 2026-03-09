@@ -29,6 +29,7 @@ fun AlertsScreen(
 ) {
     val alerts by viewModel.alerts.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var alertToDelete by remember { mutableStateOf<WeatherAlert?>(null) }
 
     if (showAddDialog) {
         AddAlertDialog(
@@ -36,6 +37,36 @@ fun AlertsScreen(
             onConfirm = { start, end, type ->
                 viewModel.addAlert(start, end, type)
                 showAddDialog = false
+            }
+        )
+    }
+
+    alertToDelete?.let { alert ->
+        AlertDialog(
+            onDismissRequest = { alertToDelete = null },
+            title = {
+                Text(text = stringResource(R.string.confirm_delete_title))
+            },
+            text = {
+                Text(text = stringResource(R.string.confirm_delete_alert_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.removeAlert(alert)
+                        alertToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { alertToDelete = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         )
     }
@@ -97,7 +128,7 @@ fun AlertsScreen(
                         AlertItem(
                             alert = alert,
                             onToggle = { viewModel.toggleAlert(alert) },
-                            onDelete = { viewModel.removeAlert(alert) }
+                            onDelete = { alertToDelete = alert }
                         )
                     }
                 }
@@ -115,14 +146,17 @@ private fun AlertItem(
     val dateFormat = SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault())
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (alert.isEnabled)
-                MaterialTheme.colorScheme.secondaryContainer
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f)
             else
-                MaterialTheme.colorScheme.surfaceVariant
-        )
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -140,8 +174,8 @@ private fun AlertItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = alert.alertType,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 Text(

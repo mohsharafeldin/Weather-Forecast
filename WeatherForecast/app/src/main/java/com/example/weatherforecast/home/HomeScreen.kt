@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.WifiOff
@@ -24,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import androidx.compose.ui.unit.TextUnit
 import com.example.weatherforecast.R
 import com.example.weatherforecast.model.WeatherItem
 import java.text.SimpleDateFormat
@@ -200,8 +201,8 @@ private fun CurrentWeatherCard(state: HomeUiState.Success, tempSymbol: String) {
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                            MaterialTheme.colorScheme.primaryContainer
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.secondary
                         )
                     )
                 )
@@ -213,65 +214,95 @@ private fun CurrentWeatherCard(state: HomeUiState.Success, tempSymbol: String) {
             ) {
                 Text(
                     text = state.weatherResponse.city.name + ", " + state.weatherResponse.city.country,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    letterSpacing = 1.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = dateFormat.format(now),
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                 )
                 Text(
                     text = timeFormat.format(now),
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                AsyncImage(
-                    model = "https://openweathermap.org/img/wn/${weatherDesc?.icon ?: "01d"}@4x.png",
-                    contentDescription = weatherDesc?.description,
-                    modifier = Modifier.size(100.dp),
-                    contentScale = ContentScale.Fit
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "${current.main.temp.toInt()}$tempSymbol",
-                    fontSize = 56.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = weatherDesc?.description?.replaceFirstChar { it.uppercase() } ?: "",
-                    fontSize = 18.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+                WeatherIcon(
+                    iconCode = weatherDesc?.icon,
+                    fontSize = 110.sp,
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = stringResource(R.string.feels_like, "${current.main.feelsLike.toInt()}$tempSymbol"),
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                    text = "${current.main.temp.toInt()}$tempSymbol",
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = weatherDesc?.description?.replaceFirstChar { it.uppercase() } ?: "",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.feels_like, "${current.main.feelsLike.toInt()}$tempSymbol"),
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "↓ ${current.main.tempMin.toInt()}$tempSymbol",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Min",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "${current.main.tempMin.toInt()}$tempSymbol",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                    Divider(
+                        modifier = Modifier
+                            .height(30.dp)
+                            .width(1.dp),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
                     )
-                    Spacer(modifier = Modifier.width(24.dp))
-                    Text(
-                        text = "↑ ${current.main.tempMax.toInt()}$tempSymbol",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Max",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "${current.main.tempMax.toInt()}$tempSymbol",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
         }
@@ -373,29 +404,36 @@ private fun DetailCard(
     value: String
 ) {
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        modifier = modifier
+            .padding(2.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(vertical = 18.dp, horizontal = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = emoji, fontSize = 24.sp)
-            Spacer(modifier = Modifier.height(6.dp))
+            Text(text = emoji, fontSize = 28.sp)
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = value,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = label,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
             )
         }
@@ -417,19 +455,24 @@ private fun SunriseSunsetCard(state: HomeUiState.Success) {
     utcFormat.timeZone = TimeZone.getTimeZone("UTC")
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(24.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "🌅", fontSize = 28.sp)
-                Spacer(modifier = Modifier.height(6.dp))
+                Text(text = "🌅", fontSize = 32.sp)
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = utcFormat.format(sunriseDate),
                     fontSize = 18.sp,
@@ -438,13 +481,14 @@ private fun SunriseSunsetCard(state: HomeUiState.Success) {
                 )
                 Text(
                     text = stringResource(R.string.sunrise),
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "🌇", fontSize = 28.sp)
-                Spacer(modifier = Modifier.height(6.dp))
+                Text(text = "🌇", fontSize = 32.sp)
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = utcFormat.format(sunsetDate),
                     fontSize = 18.sp,
@@ -453,8 +497,9 @@ private fun SunriseSunsetCard(state: HomeUiState.Success) {
                 )
                 Text(
                     text = stringResource(R.string.sunset),
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
         }
@@ -466,19 +511,24 @@ private fun AtmosphereCard(state: HomeUiState.Success) {
     val current = state.currentWeather
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(24.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "🌊", fontSize = 24.sp)
-                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "🌊", fontSize = 28.sp)
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "${current.main.seaLevel} hPa",
                     fontSize = 16.sp,
@@ -487,13 +537,14 @@ private fun AtmosphereCard(state: HomeUiState.Success) {
                 )
                 Text(
                     text = stringResource(R.string.sea_level_pressure),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "⛰️", fontSize = 24.sp)
-                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "⛰️", fontSize = 28.sp)
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "${current.main.grndLevel} hPa",
                     fontSize = 16.sp,
@@ -502,8 +553,9 @@ private fun AtmosphereCard(state: HomeUiState.Success) {
                 )
                 Text(
                     text = stringResource(R.string.ground_level_pressure),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
         }
@@ -551,10 +603,10 @@ private fun HourlyForecastItem(item: WeatherItem, tempSymbol: String) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
             
-            AsyncImage(
-                model = "https://openweathermap.org/img/wn/${weatherDesc?.icon ?: "01d"}@2x.png",
-                contentDescription = weatherDesc?.description,
-                modifier = Modifier.size(46.dp)
+            WeatherIcon(
+                iconCode = weatherDesc?.icon,
+                fontSize = 40.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
             )
             
             Text(
@@ -570,15 +622,20 @@ private fun HourlyForecastItem(item: WeatherItem, tempSymbol: String) {
 @Composable
 private fun DailyForecastItem(daily: DailyForecast, tempSymbol: String, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         onClick = onClick
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -591,14 +648,15 @@ private fun DailyForecastItem(daily: DailyForecast, tempSymbol: String, onClick:
                 )
                 Text(
                     text = daily.description.replaceFirstChar { it.uppercase() },
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
-            AsyncImage(
-                model = "https://openweathermap.org/img/wn/${daily.icon}@2x.png",
-                contentDescription = daily.description,
-                modifier = Modifier.size(40.dp)
+            WeatherIcon(
+                iconCode = daily.icon,
+                fontSize = 46.sp,
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -620,4 +678,28 @@ private fun formatDailyDate(dateStr: String): String {
     } catch (e: Exception) {
         dateStr
     }
+}
+
+@Composable
+fun WeatherIcon(iconCode: String?, fontSize: TextUnit, modifier: Modifier = Modifier) {
+    val emoji = when (iconCode) {
+        "01d" -> "☀️"
+        "01n" -> "🌙"
+        "02d" -> "⛅"
+        "02n" -> "☁️"
+        "03d", "03n" -> "☁️"
+        "04d", "04n" -> "☁️"
+        "09d", "09n" -> "🌧️"
+        "10d" -> "🌦️"
+        "10n" -> "🌧️"
+        "11d", "11n" -> "⛈️"
+        "13d", "13n" -> "❄️"
+        "50d", "50n" -> "🌫️"
+        else -> "☀️"
+    }
+    Text(
+        text = emoji,
+        fontSize = fontSize,
+        modifier = modifier
+    )
 }

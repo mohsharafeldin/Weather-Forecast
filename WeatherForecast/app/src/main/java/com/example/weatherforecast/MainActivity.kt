@@ -147,7 +147,15 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            TestWeatherForecastTheme {
+            val themeMode by settingsDataStore.themeMode.collectAsState(initial = "system")
+            val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val isDarkTheme = when (themeMode) {
+                "light" -> false
+                "dark" -> true
+                else -> isSystemDark
+            }
+
+            TestWeatherForecastTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route

@@ -1,13 +1,11 @@
 <resources>
     <string name="app_name">توقعات الطقس</string>
 
-    <!-- Bottom Nav -->
     <string name="nav_home">الرئيسية</string>
     <string name="nav_favorites">المفضلة</string>
     <string name="nav_alerts">التنبيهات</string>
     <string name="nav_settings">الإعدادات</string>
 
-    <!-- Home Screen -->
     <string name="error_title">خطأ</string>
     <string name="retry">إعادة المحاولة</string>
     <string name="hourly_forecast">توقعات الساعة</string>
@@ -32,7 +30,6 @@
     <string name="atmosphere">الغلاف الجوي</string>
     <string name="you_are_offline">أنت غير متصل بالإنترنت</string>
 
-    <!-- Settings Screen -->
     <string name="settings_title">الإعدادات</string>
     <string name="location_section">الموقع</string>
     <string name="gps_option">GPS (الموقع الحالي)</string>
@@ -49,20 +46,17 @@
     <string name="english_option">الإنجليزية</string>
     <string name="arabic_option">العربية</string>
 
-    <!-- Favorites Screen -->
     <string name="favorite_locations_title">المواقع المفضلة</string>
     <string name="no_favorites_yet">لا توجد مواقع مفضلة بعد</string>
     <string name="tap_to_add">اضغط + لإضافة موقع</string>
     <string name="add_favorite">إضافة مفضلة</string>
     <string name="delete">حذف</string>
 
-    <!-- Alerts Screen -->
     <string name="weather_alerts_title">تنبيهات الطقس</string>
     <string name="no_alerts_set">لا توجد تنبيهات طقس</string>
     <string name="tap_to_add_alert">اضغط + لإضافة تنبيه</string>
     <string name="add_alert">إضافة تنبيه</string>
 
-    <!-- Day Detail Screen -->
     <string name="day_detail_title">تفاصيل اليوم</string>
     <string name="temperature">الحرارة</string>
     <string name="feels_like_label">الإحساس</string>
@@ -71,11 +65,16 @@
     <string name="rain_chance">احتمال المطر</string>
     <string name="back">رجوع</string>
 
-    <!-- Add Alert Dialog -->
     <string name="start_time">وقت البدء</string>
     <string name="end_time">وقت الانتهاء</string>
     <string name="alert_type">نوع التنبيه</string>
     <string name="notification_option">إشعار</string>
     <string name="alarm_option">صوت إنذار</string>
     <string name="cancel">إلغاء</string>
+
+    <string name="confirm_delete_title">تأكيد الحذف</string>
+    <string name="confirm_delete_favorite_message">هل أنت متأكد من إزالة هذا الموقع من المفضلة؟</string>
+    <string name="confirm_delete_alert_message">هل أنت متأكد من حذف هذا التنبيه؟</string>
+    <string name="confirm">حذف</string>
 </resources>
+

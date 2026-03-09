@@ -72,8 +72,8 @@ fun SplashScreen(navController: NavController) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFE0F7FA), // Light Cyan
-                        Color(0xFFFFFFFF)  // White
+                        Color(0xFFE0F7FA),
+                        Color(0xFFFFFFFF)
                     )
                 )
             ),

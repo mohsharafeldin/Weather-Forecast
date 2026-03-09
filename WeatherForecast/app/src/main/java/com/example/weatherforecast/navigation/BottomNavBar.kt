@@ -7,6 +7,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -34,13 +36,28 @@ fun BottomNavBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp
+    ) {
         items.forEach { item ->
             val label = stringResource(item.labelResId)
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = label) },
-                label = { Text(label) },
+                label = {
+                    Text(
+                        text = label,
+                        fontWeight = if (currentRoute == item.route) FontWeight.Bold else FontWeight.Medium
+                    )
+                },
                 selected = currentRoute == item.route,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                ),
                 onClick = {
                     navController.navigate(item.route) {
                         popUpTo(Screen.Home.route) { saveState = true }
