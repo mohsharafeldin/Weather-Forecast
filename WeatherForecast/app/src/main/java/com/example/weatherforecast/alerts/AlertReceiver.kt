@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.example.weatherforecast.R
 
 class AlertReceiver : BroadcastReceiver() {
 
@@ -27,6 +28,7 @@ class AlertReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val alertType = intent.getStringExtra("alert_type") ?: "NOTIFICATION"
+        val alertId = intent.getIntExtra("alert_id", -1)
         val lat = intent.getDoubleExtra("lat", 30.0444)
         val lon = intent.getDoubleExtra("lon", 31.2357)
 
@@ -47,8 +49,8 @@ class AlertReceiver : BroadcastReceiver() {
                 val remoteDataSource = WeatherRemoteDataSource(RetrofitClient.weatherApiService)
                 val repository = WeatherRepositoryImpl(remoteDataSource, localDataSource)
 
-                val forecast = repository.getForecast(lat, lon, tempUnit, lang)
-                val current = forecast.list.firstOrNull()
+                val cachedForecast = repository.getCachedForecast()
+                val current = cachedForecast?.list?.firstOrNull()
 
                 val weatherId = current?.weather?.firstOrNull()?.id ?: 0
                 val temp = current?.main?.temp ?: 0.0
@@ -58,41 +60,43 @@ class AlertReceiver : BroadcastReceiver() {
                 val alertMessages = mutableListOf<String>()
 
                 if (weatherId in 200..599) {
-                    alertMessages.add("🌧️ Rain/Storm expected: $description")
+                    alertMessages.add(context.getString(R.string.alert_rain, description))
                 }
                 if (weatherId in 600..699) {
-                    alertMessages.add("❄️ Snow expected: $description")
+                    alertMessages.add(context.getString(R.string.alert_snow, description))
                 }
                 if (weatherId in 700..799) {
-                    alertMessages.add("🌫️ Low visibility: $description")
+                    alertMessages.add(context.getString(R.string.alert_fog, description))
                 }
                 if (windSpeed > 10) {
-                    alertMessages.add("💨 High wind speed: ${"%.1f".format(windSpeed)} m/s")
+                    alertMessages.add(context.getString(R.string.alert_wind, "%.1f".format(windSpeed)))
                 }
                 if (tempUnit == "metric" && temp < 0) {
-                    alertMessages.add("🥶 Very low temperature: ${temp.toInt()}°C")
+                    alertMessages.add(context.getString(R.string.alert_temp_low, temp.toInt()))
                 }
                 if (tempUnit == "metric" && temp > 40) {
-                    alertMessages.add("🔥 Very high temperature: ${temp.toInt()}°C")
+                    alertMessages.add(context.getString(R.string.alert_temp_high, temp.toInt()))
                 }
 
                 val message = if (alertMessages.isNotEmpty()) {
                     alertMessages.joinToString("\n")
                 } else {
-                    "Current weather: $description, ${temp.toInt()}°"
+                    context.getString(R.string.alert_current_weather, description, temp.toInt())
                 }
 
                 if (alertType == "ALARM") {
-                    AlarmSoundService.start(context, message)
+                    AlarmSoundService.start(context, message, alertId)
                 } else {
-                    showNotification(context, message)
+                    val notificationId = System.currentTimeMillis().toInt()
+                    showNotification(context, message, notificationId, alertId)
                 }
             } catch (e: Exception) {
-                val fallbackMessage = "Weather alert triggered. Check the app for details."
+                val fallbackMessage = context.getString(R.string.alert_fallback)
                 if (alertType == "ALARM") {
-                    AlarmSoundService.start(context, fallbackMessage)
+                    AlarmSoundService.start(context, fallbackMessage, alertId)
                 } else {
-                    showNotification(context, fallbackMessage)
+                    val notificationId = System.currentTimeMillis().toInt()
+                    showNotification(context, fallbackMessage, notificationId, alertId)
                 }
             } finally {
                 pendingResult.finish()
@@ -100,36 +104,98 @@ class AlertReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun showNotification(context: Context, message: String) {
+    private fun showNotification(context: Context, message: String, notificationId: Int, alertId: Int) {
         createNotificationChannel(context)
+        
+        val dismissIntent = Intent(context, StopAlarmReceiver::class.java).apply {
+            putExtra("notification_id", notificationId)
+            putExtra("alert_id", alertId)
+            action = "DISMISS"
+        }
+        val dismissPendingIntent = android.app.PendingIntent.getBroadcast(
+            context, notificationId, dismissIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val stopIntent = Intent(context, StopAlarmReceiver::class.java).apply {
+            putExtra("notification_id", notificationId)
+            putExtra("alert_id", alertId)
+            action = "STOP"
+        }
+        val stopPendingIntent = android.app.PendingIntent.getBroadcast(
+            context, notificationId + 1, stopIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Weather Alert")
+            .setContentTitle(context.getString(R.string.weather_alert))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                context.getString(R.string.snooze),
+                dismissPendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_menu_delete,
+                context.getString(R.string.stop),
+                stopPendingIntent
+            )
             .build()
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        notificationManager.notify(notificationId, notification)
     }
 
-    private fun showNotificationWithSound(context: Context, message: String) {
+    private fun showNotificationWithSound(context: Context, message: String, notificationId: Int, alertId: Int) {
         createNotificationChannel(context)
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        
+        val dismissIntent = Intent(context, StopAlarmReceiver::class.java).apply {
+            putExtra("notification_id", notificationId)
+            putExtra("alert_id", alertId)
+            action = "DISMISS"
+        }
+        val dismissPendingIntent = android.app.PendingIntent.getBroadcast(
+            context, notificationId, dismissIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val stopIntent = Intent(context, StopAlarmReceiver::class.java).apply {
+            putExtra("notification_id", notificationId)
+            putExtra("alert_id", alertId)
+            action = "STOP"
+        }
+        val stopPendingIntent = android.app.PendingIntent.getBroadcast(
+            context, notificationId + 1, stopIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("⚠️ Weather Alert!")
+            .setContentTitle(context.getString(R.string.weather_alarm))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setSound(alarmSound)
             .setAutoCancel(true)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                context.getString(R.string.snooze),
+                dismissPendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_menu_delete,
+                context.getString(R.string.stop),
+                stopPendingIntent
+            )
             .build()
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        notificationManager.notify(notificationId, notification)
     }
 
     private fun createNotificationChannel(context: Context) {

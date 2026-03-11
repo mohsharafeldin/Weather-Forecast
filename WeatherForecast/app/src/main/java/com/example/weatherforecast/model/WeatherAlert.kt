@@ -16,5 +16,6 @@ data class WeatherAlert(
     val startTime: Long,   
     val endTime: Long,     
     val alertType: String, 
-    val isEnabled: Boolean = true
+    val isEnabled: Boolean = true,
+    val snoozeDuration: Int = 5
 )

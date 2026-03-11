@@ -22,23 +22,22 @@ class AlertsViewModel(
     val alerts: StateFlow<List<WeatherAlert>> = repository.getAllAlerts()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addAlert(startTime: Long, endTime: Long, alertType: String) {
+    fun addAlert(startTime: Long, endTime: Long, alertType: String, snoozeDuration: Int) {
         viewModelScope.launch {
             val alert = WeatherAlert(
                 startTime = startTime,
                 endTime = endTime,
                 alertType = alertType,
-                isEnabled = true
+                isEnabled = true,
+                snoozeDuration = snoozeDuration
             )
-            repository.addAlert(alert)
-
+            val idList = repository.addAlert(alert)
+            val generatedId = idList.toInt()
+            
             val lat = settingsDataStore.mapLat.first()
             val lon = settingsDataStore.mapLon.first()
-            val allAlerts = repository.getAllAlerts().first()
-            val savedAlert = allAlerts.lastOrNull()
-            if (savedAlert != null) {
-                AlertScheduler.schedule(context, savedAlert, lat, lon)
-            }
+            val savedAlert = alert.copy(id = generatedId)
+            AlertScheduler.schedule(context, savedAlert, lat, lon)
         }
     }
 

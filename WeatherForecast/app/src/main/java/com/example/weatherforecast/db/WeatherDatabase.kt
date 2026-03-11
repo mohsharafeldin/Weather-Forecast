@@ -12,9 +12,11 @@ import com.example.weatherforecast.datasource.local.FavoriteLocationDao
 import com.example.weatherforecast.datasource.local.WeatherAlertDao
 
 
+import androidx.room.TypeConverters
+
 @Database(
     entities = [FavoriteLocation::class, WeatherAlert::class, CachedForecast::class],
-    version = 3,
+    version = 6,
     exportSchema = false
 )
 abstract class WeatherDatabase : RoomDatabase() {

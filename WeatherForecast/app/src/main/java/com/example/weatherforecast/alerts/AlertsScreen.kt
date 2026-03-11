@@ -1,5 +1,12 @@
 package com.example.weatherforecast.alerts
 
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,20 +30,29 @@ import com.example.weatherforecast.model.WeatherAlert
 import java.text.SimpleDateFormat
 import java.util.*
 
-
 @Composable
 fun AlertsScreen(
     viewModel: AlertsViewModel
 ) {
+    val context = LocalContext.current
     val alerts by viewModel.alerts.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var alertToDelete by remember { mutableStateOf<WeatherAlert?>(null) }
 
+    val exactAlarmLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()) {
+            showAddDialog = true
+        }
+    }
+
     if (showAddDialog) {
         AddAlertDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { start, end, type ->
-                viewModel.addAlert(start, end, type)
+            onConfirm = { start, end, type, snooze ->
+                viewModel.addAlert(start, end, type, snooze)
                 showAddDialog = false
             }
         )
@@ -74,7 +91,15 @@ fun AlertsScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showAddDialog = true },
+                onClick = {
+                    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                        exactAlarmLauncher.launch(intent)
+                    } else {
+                        showAddDialog = true
+                    }
+                },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_alert))
@@ -178,11 +203,36 @@ private fun AlertItem(
                     fontSize = 17.sp,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                Text(
-                    text = "${dateFormat.format(Date(alert.startTime))} — ${dateFormat.format(Date(alert.endTime))}",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Notifications,
+                        contentDescription = "Start",
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "From: ${dateFormat.format(Date(alert.startTime))}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.NotificationsActive,
+                        contentDescription = "End",
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "To: ${dateFormat.format(Date(alert.endTime))}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    )
+                }
             }
             Switch(
                 checked = alert.isEnabled,

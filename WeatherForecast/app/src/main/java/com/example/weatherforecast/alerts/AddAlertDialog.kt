@@ -20,7 +20,7 @@ import java.util.*
 @Composable
 fun AddAlertDialog(
     onDismiss: () -> Unit,
-    onConfirm: (startTime: Long, endTime: Long, alertType: String) -> Unit
+    onConfirm: (startTime: Long, endTime: Long, alertType: String, snoozeDuration: Int) -> Unit
 ) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -28,6 +28,18 @@ fun AddAlertDialog(
     var startTime by remember { mutableStateOf(System.currentTimeMillis()) }
     var endTime by remember { mutableStateOf(System.currentTimeMillis() + 24 * 60 * 60 * 1000) }
     var alertType by remember { mutableStateOf("NOTIFICATION") }
+    var snoozeDuration by remember { mutableStateOf(5) }
+
+    val isStartTimeValid = startTime >= System.currentTimeMillis() - 60000 
+    val isEndTimeValid = endTime > startTime
+    val isValid = isStartTimeValid && isEndTimeValid
+
+    val errorMessage = when {
+        !isStartTimeValid -> context.getString(R.string.error_start_time_past)
+        !isEndTimeValid -> context.getString(R.string.error_end_time_before_start)
+        else -> ""
+    }
+
     val dateFormat = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
 
     AlertDialog(
@@ -108,10 +120,45 @@ fun AddAlertDialog(
                     )
                     Text(stringResource(R.string.alarm_option))
                 }
+
+                Text(stringResource(R.string.snooze_duration), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    listOf(5, 10, 15).forEach { duration ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = snoozeDuration == duration,
+                                onClick = { snoozeDuration = duration }
+                            )
+                            Text(
+                                text = stringResource(R.string.duration_min, duration),
+                                fontSize = 14.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+
+                if (!isValid) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(startTime, endTime, alertType) }) {
+            Button(
+                onClick = { onConfirm(startTime, endTime, alertType, snoozeDuration) },
+                enabled = isValid
+            ) {
                 Text(stringResource(R.string.add_alert))
             }
         },

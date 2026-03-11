@@ -17,7 +17,7 @@ interface IWeatherLocalDataSource {
 
 
     fun getAllAlerts(): Flow<List<WeatherAlert>>
-    suspend fun addAlert(alert: WeatherAlert)
+    suspend fun addAlert(alert: WeatherAlert): Long
     suspend fun removeAlert(alert: WeatherAlert)
     suspend fun updateAlert(alert: WeatherAlert)
     suspend fun getActiveAlerts(currentTime: Long): List<WeatherAlert>

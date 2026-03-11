@@ -32,7 +32,7 @@ class WeatherLocalDataSource(
     override fun getAllAlerts(): Flow<List<WeatherAlert>> =
         weatherAlertDao.getAllAlerts()
 
-    override suspend fun addAlert(alert: WeatherAlert) =
+    override suspend fun addAlert(alert: WeatherAlert): Long =
         weatherAlertDao.insert(alert)
 
     override suspend fun removeAlert(alert: WeatherAlert) =

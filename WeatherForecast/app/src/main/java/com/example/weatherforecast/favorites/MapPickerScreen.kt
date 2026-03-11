@@ -1,11 +1,17 @@
 package com.example.weatherforecast.favorites
 
 import android.location.Geocoder
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,21 +20,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherforecast.model.GeocodingResult
+import com.example.weatherforecast.repository.IWeatherRepository
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.delay
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapPickerScreen(
+    repository: IWeatherRepository,
     onSave: (name: String, lat: Double, lon: Double) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val defaultPosition = LatLng(30.0444, 31.2357)
 
@@ -36,8 +48,32 @@ fun MapPickerScreen(
     var resolvedCityName by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    var searchQuery by remember { mutableStateOf("") }
+    var searchResults by remember { mutableStateOf<List<GeocodingResult>>(emptyList()) }
+    var isSearching by remember { mutableStateOf(false) }
+    var showResults by remember { mutableStateOf(false) }
+
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultPosition, 5f)
+    }
+
+    LaunchedEffect(searchQuery) {
+        if (searchQuery.length < 2) {
+            searchResults = emptyList()
+            showResults = false
+            return@LaunchedEffect
+        }
+        delay(300)
+        isSearching = true
+        try {
+            val results = repository.searchCity(searchQuery)
+            searchResults = results
+            showResults = results.isNotEmpty()
+        } catch (_: Exception) {
+            searchResults = emptyList()
+            showResults = false
+        }
+        isSearching = false
     }
 
     fun resolveLocationName(latLng: LatLng) {
@@ -83,6 +119,7 @@ fun MapPickerScreen(
                 onMapClick = { latLng ->
                     selectedPosition = latLng
                     errorMessage = null
+                    showResults = false
                     resolveLocationName(latLng)
                 }
             ) {
@@ -91,6 +128,102 @@ fun MapPickerScreen(
                         state = MarkerState(position = position),
                         title = resolvedCityName.ifBlank { "Selected Location" },
                         snippet = "Lat: ${"%.4f".format(position.latitude)}, Lon: ${"%.4f".format(position.longitude)}"
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search for a city...") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = null)
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = {
+                                searchQuery = ""
+                                searchResults = emptyList()
+                                showResults = false
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                AnimatedVisibility(visible = showResults) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.heightIn(max = 250.dp)
+                        ) {
+                            items(searchResults) { result ->
+                                val displayName = buildString {
+                                    append(result.name)
+                                    if (!result.state.isNullOrBlank()) append(", ${result.state}")
+                                    append(", ${result.country}")
+                                }
+                                ListItem(
+                                    headlineContent = {
+                                        Text(
+                                            text = displayName,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    },
+                                    supportingContent = {
+                                        Text(
+                                            text = "Lat: ${"%.4f".format(result.lat)}, Lon: ${"%.4f".format(result.lon)}",
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        )
+                                    },
+                                    modifier = Modifier.clickable {
+                                        val latLng = LatLng(result.lat, result.lon)
+                                        selectedPosition = latLng
+                                        resolvedCityName = result.name
+                                        searchQuery = displayName
+                                        showResults = false
+                                        errorMessage = null
+                                        cameraPositionState.move(
+                                            CameraUpdateFactory.newLatLngZoom(latLng, 10f)
+                                        )
+                                    }
+                                )
+                                HorizontalDivider()
+                            }
+                        }
+                    }
+                }
+
+                if (isSearching) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -112,7 +245,7 @@ fun MapPickerScreen(
                 ) {
                     if (selectedPosition == null) {
                         Text(
-                            text = "Tap on the map to select a location",
+                            text = "Tap on the map or search for a city",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)

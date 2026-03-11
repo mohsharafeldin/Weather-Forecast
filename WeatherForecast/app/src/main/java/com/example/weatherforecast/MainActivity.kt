@@ -203,6 +203,7 @@ class MainActivity : ComponentActivity() {
 
                         composable(Screen.MapPicker.route) {
                             MapPickerScreen(
+                                repository = repository,
                                 onSave = { name, lat, lon ->
                                     favoritesViewModel.addFavorite(name, lat, lon)
                                     navController.popBackStack()

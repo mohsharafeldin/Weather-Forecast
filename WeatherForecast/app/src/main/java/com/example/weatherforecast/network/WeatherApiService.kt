@@ -1,5 +1,6 @@
 package com.example.weatherforecast.network
 
+import com.example.weatherforecast.model.GeocodingResult
 import com.example.weatherforecast.model.WeatherResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -16,7 +17,15 @@ interface WeatherApiService {
         @Query("lang") lang: String = "en"
     ): WeatherResponse
 
+    @GET("geo/1.0/direct")
+    suspend fun searchCity(
+        @Query("q") query: String,
+        @Query("limit") limit: Int = 5,
+        @Query("appid") apiKey: String
+    ): List<GeocodingResult>
+
     companion object {
         const val BASE_URL = "https://api.openweathermap.org/"
     }
 }
+

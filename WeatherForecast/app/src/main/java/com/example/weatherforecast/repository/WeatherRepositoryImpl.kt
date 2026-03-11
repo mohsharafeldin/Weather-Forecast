@@ -3,6 +3,7 @@ package com.example.weatherforecast.repository
 import com.example.weatherforecast.datasource.local.IWeatherLocalDataSource
 import com.example.weatherforecast.datasource.remote.IWeatherRemoteDataSource
 import com.example.weatherforecast.model.CachedForecast
+import com.example.weatherforecast.model.GeocodingResult
 import com.example.weatherforecast.model.FavoriteLocation
 import com.example.weatherforecast.model.WeatherAlert
 import com.example.weatherforecast.model.WeatherResponse
@@ -29,6 +30,10 @@ class WeatherRepositoryImpl(
         return remoteDataSource.getForecast(lat, lon, API_KEY, units, lang)
     }
 
+    override suspend fun searchCity(query: String): List<GeocodingResult> {
+        return remoteDataSource.searchCity(query, API_KEY)
+    }
+
     override fun getAllFavorites(): Flow<List<FavoriteLocation>> =
         localDataSource.getAllFavorites()
 
@@ -47,7 +52,7 @@ class WeatherRepositoryImpl(
     override fun getAllAlerts(): Flow<List<WeatherAlert>> =
         localDataSource.getAllAlerts()
 
-    override suspend fun addAlert(alert: WeatherAlert) =
+    override suspend fun addAlert(alert: WeatherAlert): Long =
         localDataSource.addAlert(alert)
 
     override suspend fun removeAlert(alert: WeatherAlert) =
