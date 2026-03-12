@@ -35,7 +35,32 @@ class FavoritesViewModel(
 
     fun addFavorite(name: String, lat: Double, lon: Double) {
         viewModelScope.launch {
-            repository.addFavorite(FavoriteLocation(name = name, latitude = lat, longitude = lon))
+            try {
+                val tempUnit = settingsDataStore.temperatureUnit.first()
+                val lang = settingsDataStore.language.first()
+                
+                val response = repository.getForecast(lat, lon, tempUnit, lang)
+                
+                val gson = com.google.gson.Gson()
+                val cachedResponseJson = gson.toJson(response)
+                
+                repository.addFavorite(
+                    FavoriteLocation(
+                        name = name,
+                        latitude = lat,
+                        longitude = lon,
+                        cachedResponseJson = cachedResponseJson
+                    )
+                )
+            } catch (e: Exception) {
+                repository.addFavorite(
+                    FavoriteLocation(
+                        name = name,
+                        latitude = lat,
+                        longitude = lon
+                    )
+                )
+            }
         }
     }
 
