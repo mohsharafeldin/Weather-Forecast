@@ -35,9 +35,16 @@ fun AlertsScreen(
     viewModel: AlertsViewModel
 ) {
     val context = LocalContext.current
-    val alerts by viewModel.alerts.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var alertToDelete by remember { mutableStateOf<WeatherAlert?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     val exactAlarmLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -89,6 +96,7 @@ fun AlertsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -120,41 +128,66 @@ fun AlertsScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            if (alerts.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+            when (uiState) {
+                is AlertsUiState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is AlertsUiState.Error -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = stringResource(R.string.no_alerts_set),
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            text = (uiState as AlertsUiState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
                             fontSize = 16.sp
-                        )
-                        Text(
-                            text = stringResource(R.string.tap_to_add_alert),
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                            fontSize = 14.sp
                         )
                     }
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(alerts, key = { it.id }) { alert ->
-                        AlertItem(
-                            alert = alert,
-                            onToggle = { viewModel.toggleAlert(alert) },
-                            onDelete = { alertToDelete = alert }
-                        )
+                is AlertsUiState.Success -> {
+                    val alerts = (uiState as AlertsUiState.Success).alerts
+                    if (alerts.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.Notifications,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.no_alerts_set),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    fontSize = 16.sp
+                                )
+                                Text(
+                                    text = stringResource(R.string.tap_to_add_alert),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(alerts, key = { it.id }) { alert ->
+                                AlertItem(
+                                    alert = alert,
+                                    onToggle = { viewModel.toggleAlert(alert) },
+                                    onDelete = { alertToDelete = alert }
+                                )
+                            }
+                        }
                     }
                 }
             }

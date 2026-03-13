@@ -26,115 +26,150 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.settings_title),
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
-
-
-        SettingsSectionTitle(stringResource(R.string.location_section), "📍")
-        SettingsRadioGroup(
-            options = listOf(
-                Triple("gps", stringResource(R.string.gps_option), "🛰️"),
-                Triple("map", stringResource(R.string.map_option), "🗺️")
-            ),
-            selected = uiState.locationMode,
-            onSelected = { viewModel.setLocationMode(it) }
-        )
-
-        if (uiState.locationMode == "map") {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Lat: ${"%.4f".format(uiState.mapLat)}, Lon: ${"%.4f".format(uiState.mapLon)}",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-            )
-            Button(
-                onClick = onOpenMapPicker,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = null
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.pick_on_map))
-            }
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { message ->
+            snackbarHostState.showSnackbar(message)
         }
+    }
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { scaffoldPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(scaffoldPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.settings_title),
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
 
+            when (uiState) {
+                is SettingsUiState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is SettingsUiState.Error -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = (uiState as SettingsUiState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+                is SettingsUiState.Success -> {
+                    val settings = uiState as SettingsUiState.Success
 
-        SettingsSectionTitle(stringResource(R.string.temperature_unit_section), "🌡️")
-        SettingsRadioGroup(
-            options = listOf(
-                Triple("metric", stringResource(R.string.celsius_option), "°C"),
-                Triple("imperial", stringResource(R.string.fahrenheit_option), "°F"),
-                Triple("standard", stringResource(R.string.kelvin_option), " K")
-            ),
-            selected = uiState.temperatureUnit,
-            onSelected = { viewModel.setTemperatureUnit(it) }
-        )
+                    SettingsSectionTitle(stringResource(R.string.location_section), "📍")
+                    SettingsRadioGroup(
+                        options = listOf(
+                            Triple("gps", stringResource(R.string.gps_option), "🛰️"),
+                            Triple("map", stringResource(R.string.map_option), "🗺️")
+                        ),
+                        selected = settings.locationMode,
+                        onSelected = { viewModel.setLocationMode(it) }
+                    )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                    if (settings.locationMode == "map") {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Lat: ${"%.4f".format(settings.mapLat)}, Lon: ${"%.4f".format(settings.mapLon)}",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+                        )
+                        Button(
+                            onClick = onOpenMapPicker,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.pick_on_map))
+                        }
+                    }
 
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-        SettingsSectionTitle(stringResource(R.string.wind_speed_unit_section), "🌀")
-        SettingsRadioGroup(
-            options = listOf(
-                Triple("m/s", stringResource(R.string.meter_sec_option), "🌬️"),
-                Triple("mph", stringResource(R.string.miles_hour_option), "💨")
-            ),
-            selected = uiState.windSpeedUnit,
-            onSelected = { viewModel.setWindSpeedUnit(it) }
-        )
+                    SettingsSectionTitle(stringResource(R.string.temperature_unit_section), "🌡️")
+                    SettingsRadioGroup(
+                        options = listOf(
+                            Triple("metric", stringResource(R.string.celsius_option), "°C"),
+                            Triple("imperial", stringResource(R.string.fahrenheit_option), "°F"),
+                            Triple("standard", stringResource(R.string.kelvin_option), " K")
+                        ),
+                        selected = settings.temperatureUnit,
+                        onSelected = { viewModel.setTemperatureUnit(it) }
+                    )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-        SettingsSectionTitle(stringResource(R.string.theme_section), "🎨")
-        SettingsRadioGroup(
-            options = listOf(
-                Triple("system", stringResource(R.string.system_default_option), "⚙️"),
-                Triple("light", stringResource(R.string.light_mode_option), "☀️"),
-                Triple("dark", stringResource(R.string.dark_mode_option), "🌙")
-            ),
-            selected = uiState.themeMode,
-            onSelected = { viewModel.setThemeMode(it) }
-        )
+                    SettingsSectionTitle(stringResource(R.string.wind_speed_unit_section), "🌀")
+                    SettingsRadioGroup(
+                        options = listOf(
+                            Triple("m/s", stringResource(R.string.meter_sec_option), "🌬️"),
+                            Triple("mph", stringResource(R.string.miles_hour_option), "💨")
+                        ),
+                        selected = settings.windSpeedUnit,
+                        onSelected = { viewModel.setWindSpeedUnit(it) }
+                    )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-        SettingsSectionTitle(stringResource(R.string.language_section), "🌍")
-        SettingsRadioGroup(
-            options = listOf(
-                Triple("en", stringResource(R.string.english_option), "🇺🇸"),
-                Triple("ar", stringResource(R.string.arabic_option), "🇪🇬")
-            ),
-            selected = uiState.language,
-            onSelected = { lang ->
-                viewModel.setLanguage(lang)
-                val activity = context as? Activity
-                if (activity != null) {
-                    activity.getSharedPreferences("language_prefs", android.content.Context.MODE_PRIVATE)
-                        .edit().putString("language", lang).commit()
-                    LocaleHelper.applyLocaleAndRecreate(activity, lang)
+                    SettingsSectionTitle(stringResource(R.string.theme_section), "🎨")
+                    SettingsRadioGroup(
+                        options = listOf(
+                            Triple("system", stringResource(R.string.system_default_option), "⚙️"),
+                            Triple("light", stringResource(R.string.light_mode_option), "☀️"),
+                            Triple("dark", stringResource(R.string.dark_mode_option), "🌙")
+                        ),
+                        selected = settings.themeMode,
+                        onSelected = { viewModel.setThemeMode(it) }
+                    )
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+                    SettingsSectionTitle(stringResource(R.string.language_section), "🌍")
+                    SettingsRadioGroup(
+                        options = listOf(
+                            Triple("en", stringResource(R.string.english_option), "🇺🇸"),
+                            Triple("ar", stringResource(R.string.arabic_option), "🇪🇬")
+                        ),
+                        selected = settings.language,
+                        onSelected = { lang ->
+                            viewModel.setLanguage(lang)
+                            val activity = context as? Activity
+                            if (activity != null) {
+                                activity.getSharedPreferences("language_prefs", android.content.Context.MODE_PRIVATE)
+                                    .edit().putString("language", lang).commit()
+                                LocaleHelper.applyLocaleAndRecreate(activity, lang)
+                            }
+                        }
+                    )
                 }
             }
-        )
+        }
     }
 }
 

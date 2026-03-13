@@ -4,6 +4,7 @@ import com.example.weatherforecast.model.CachedForecast
 import com.example.weatherforecast.model.FavoriteLocation
 import com.example.weatherforecast.model.WeatherAlert
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 
 class WeatherLocalDataSource(
@@ -47,6 +48,7 @@ class WeatherLocalDataSource(
     override suspend fun cacheForecast(forecast: CachedForecast) =
         cachedForecastDao.insertForecast(forecast)
 
-    override suspend fun getCachedForecast(): CachedForecast? =
-        cachedForecastDao.getCachedForecast()
+    override fun getCachedForecast(): Flow<CachedForecast?> = flow {
+        emit(cachedForecastDao.getCachedForecast())
+    }
 }

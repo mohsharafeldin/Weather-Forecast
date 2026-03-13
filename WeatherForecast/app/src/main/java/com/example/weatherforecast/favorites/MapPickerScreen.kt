@@ -30,6 +30,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,7 +67,7 @@ fun MapPickerScreen(
         delay(300)
         isSearching = true
         try {
-            val results = repository.searchCity(searchQuery)
+            val results = repository.searchCity(searchQuery).first()
             searchResults = results
             showResults = results.isNotEmpty()
         } catch (_: Exception) {

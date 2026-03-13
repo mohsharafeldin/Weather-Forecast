@@ -51,7 +51,7 @@ class WeatherAlertWorker(
             val lat = settingsDataStore.mapLat.first()
             val lon = settingsDataStore.mapLon.first()
 
-            val forecast = repository.getForecast(lat, lon, tempUnit, lang)
+            val forecast = repository.getForecast(lat, lon, tempUnit, lang).first()
             val current = forecast.list.firstOrNull() ?: return Result.success()
 
 

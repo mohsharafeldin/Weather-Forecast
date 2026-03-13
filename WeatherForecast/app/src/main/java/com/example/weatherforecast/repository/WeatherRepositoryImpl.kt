@@ -9,6 +9,7 @@ import com.example.weatherforecast.model.WeatherAlert
 import com.example.weatherforecast.model.WeatherResponse
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class WeatherRepositoryImpl(
     private val remoteDataSource: IWeatherRemoteDataSource,
@@ -21,16 +22,16 @@ class WeatherRepositoryImpl(
 
     private val gson = Gson()
 
-    override suspend fun getForecast(
+    override fun getForecast(
         lat: Double,
         lon: Double,
         units: String,
         lang: String
-    ): WeatherResponse {
+    ): Flow<WeatherResponse> {
         return remoteDataSource.getForecast(lat, lon, API_KEY, units, lang)
     }
 
-    override suspend fun searchCity(query: String): List<GeocodingResult> {
+    override fun searchCity(query: String): Flow<List<GeocodingResult>> {
         return remoteDataSource.searchCity(query, API_KEY)
     }
 
@@ -73,12 +74,17 @@ class WeatherRepositoryImpl(
         localDataSource.cacheForecast(cached)
     }
 
-    override suspend fun getCachedForecast(): WeatherResponse? {
-        val cached = localDataSource.getCachedForecast() ?: return null
-        return try {
-            gson.fromJson(cached.responseJson, WeatherResponse::class.java)
-        } catch (e: Exception) {
-            null
+    override fun getCachedForecast(): Flow<WeatherResponse?> {
+        return localDataSource.getCachedForecast().map { cached ->
+            if (cached != null) {
+                try {
+                    gson.fromJson(cached.responseJson, WeatherResponse::class.java)
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
         }
     }
 }

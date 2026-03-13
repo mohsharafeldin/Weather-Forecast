@@ -8,10 +8,14 @@ import com.example.weatherforecast.model.WeatherResponse
 import com.example.weatherforecast.network.ConnectivityObserver
 import com.example.weatherforecast.repository.IWeatherRepository
 import com.example.weatherforecast.settings.SettingsDataStore
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -49,6 +53,9 @@ class HomeViewModel(
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private val _snackbarEvents = MutableSharedFlow<String>()
+    val snackbarEvents: SharedFlow<String> = _snackbarEvents.asSharedFlow()
 
     val isOnline: StateFlow<Boolean> = connectivityObserver.isOnline
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -112,18 +119,22 @@ class HomeViewModel(
                 lon = settingsDataStore.mapLon.first()
             }
 
-            val response = repository.getForecast(lat, lon, tempUnit, lang)
-            repository.cacheForecast(response)
-            applyResponse(response, tempUnit, windUnit)
+            repository.getForecast(lat, lon, tempUnit, lang)
+                .catch { e ->
+                    val cached = repository.getCachedForecast().first()
+                    if (cached != null) {
+                        applyResponse(cached, tempUnit, windUnit)
+                        _snackbarEvents.emit("Offline: showing cached data")
+                    } else {
+                        _uiState.value = HomeUiState.Error(e.message ?: "Unknown error occurred")
+                    }
+                }
+                .collect { response ->
+                    repository.cacheForecast(response)
+                    applyResponse(response, tempUnit, windUnit)
+                }
         } catch (e: Exception) {
-            val cached = repository.getCachedForecast()
-            if (cached != null) {
-                val tempUnit = settingsDataStore.temperatureUnit.first()
-                val windUnit = settingsDataStore.windSpeedUnit.first()
-                applyResponse(cached, tempUnit, windUnit)
-            } else {
-                _uiState.value = HomeUiState.Error(e.message ?: "Unknown error occurred")
-            }
+            _uiState.value = HomeUiState.Error(e.message ?: "Unknown error occurred")
         }
     }
 
@@ -166,3 +177,4 @@ class HomeViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+

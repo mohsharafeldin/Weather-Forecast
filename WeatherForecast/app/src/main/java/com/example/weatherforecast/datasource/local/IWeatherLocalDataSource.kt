@@ -23,5 +23,5 @@ interface IWeatherLocalDataSource {
     suspend fun getActiveAlerts(currentTime: Long): List<WeatherAlert>
 
     suspend fun cacheForecast(forecast: CachedForecast)
-    suspend fun getCachedForecast(): CachedForecast?
+    fun getCachedForecast(): Flow<CachedForecast?>
 }

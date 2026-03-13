@@ -33,6 +33,13 @@ fun FavoritesScreen(
 ) {
     val favorites by viewModel.favorites.collectAsState()
     var locationToDelete by remember { mutableStateOf<FavoriteLocation?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     locationToDelete?.let { location ->
         AlertDialog(
@@ -65,6 +72,7 @@ fun FavoritesScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddClick,

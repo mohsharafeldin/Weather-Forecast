@@ -7,10 +7,14 @@ import com.example.weatherforecast.model.FavoriteLocation
 import com.example.weatherforecast.model.WeatherResponse
 import com.example.weatherforecast.repository.IWeatherRepository
 import com.example.weatherforecast.settings.SettingsDataStore
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -33,25 +37,40 @@ class FavoritesViewModel(
     private val _detailState = MutableStateFlow<FavoriteDetailState>(FavoriteDetailState.Idle)
     val detailState: StateFlow<FavoriteDetailState> = _detailState.asStateFlow()
 
+    private val _events = MutableSharedFlow<String>()
+    val events: SharedFlow<String> = _events.asSharedFlow()
+
     fun addFavorite(name: String, lat: Double, lon: Double) {
         viewModelScope.launch {
             try {
                 val tempUnit = settingsDataStore.temperatureUnit.first()
                 val lang = settingsDataStore.language.first()
                 
-                val response = repository.getForecast(lat, lon, tempUnit, lang)
-                
-                val gson = com.google.gson.Gson()
-                val cachedResponseJson = gson.toJson(response)
-                
-                repository.addFavorite(
-                    FavoriteLocation(
-                        name = name,
-                        latitude = lat,
-                        longitude = lon,
-                        cachedResponseJson = cachedResponseJson
-                    )
-                )
+                repository.getForecast(lat, lon, tempUnit, lang)
+                    .catch {
+                        repository.addFavorite(
+                            FavoriteLocation(
+                                name = name,
+                                latitude = lat,
+                                longitude = lon
+                            )
+                        )
+                        _events.emit("Favorite added (offline)")
+                    }
+                    .collect { response ->
+                        val gson = com.google.gson.Gson()
+                        val cachedResponseJson = gson.toJson(response)
+                        
+                        repository.addFavorite(
+                            FavoriteLocation(
+                                name = name,
+                                latitude = lat,
+                                longitude = lon,
+                                cachedResponseJson = cachedResponseJson
+                            )
+                        )
+                        _events.emit("Favorite added")
+                    }
             } catch (e: Exception) {
                 repository.addFavorite(
                     FavoriteLocation(
@@ -60,6 +79,7 @@ class FavoritesViewModel(
                         longitude = lon
                     )
                 )
+                _events.emit("Favorite added (without weather data)")
             }
         }
     }
@@ -67,6 +87,7 @@ class FavoritesViewModel(
     fun removeFavorite(location: FavoriteLocation) {
         viewModelScope.launch {
             repository.removeFavorite(location)
+            _events.emit("Favorite removed")
         }
     }
 
@@ -84,27 +105,27 @@ class FavoritesViewModel(
                 val lang = settingsDataStore.language.first()
                 val windUnit = settingsDataStore.windSpeedUnit.first()
 
-                try {
-                    val response = repository.getForecast(location.latitude, location.longitude, tempUnit, lang)
-                    
-                    val gson = com.google.gson.Gson()
-                    val updatedLocation = location.copy(cachedResponseJson = gson.toJson(response))
-                    repository.updateFavorite(updatedLocation)
-                    
-                    _detailState.value = FavoriteDetailState.Success(response, tempUnit, windUnit)
-                } catch (e: Exception) {
-                    if (location.cachedResponseJson != null) {
-                        try {
-                            val gson = com.google.gson.Gson()
-                            val cachedResponse = gson.fromJson(location.cachedResponseJson, WeatherResponse::class.java)
-                            _detailState.value = FavoriteDetailState.Success(cachedResponse, tempUnit, windUnit)
-                        } catch (parseEx: Exception) {
-                            _detailState.value = FavoriteDetailState.Error("Failed to parse cached data")
+                repository.getForecast(location.latitude, location.longitude, tempUnit, lang)
+                    .catch { e ->
+                        if (location.cachedResponseJson != null) {
+                            try {
+                                val gson = com.google.gson.Gson()
+                                val cachedResponse = gson.fromJson(location.cachedResponseJson, WeatherResponse::class.java)
+                                _detailState.value = FavoriteDetailState.Success(cachedResponse, tempUnit, windUnit)
+                            } catch (parseEx: Exception) {
+                                _detailState.value = FavoriteDetailState.Error("Failed to parse cached data")
+                            }
+                        } else {
+                            _detailState.value = FavoriteDetailState.Error(e.message ?: "You are offline and no cached data is available")
                         }
-                    } else {
-                        _detailState.value = FavoriteDetailState.Error(e.message ?: "You are offline and no cached data is available")
                     }
-                }
+                    .collect { response ->
+                        val gson = com.google.gson.Gson()
+                        val updatedLocation = location.copy(cachedResponseJson = gson.toJson(response))
+                        repository.updateFavorite(updatedLocation)
+                        
+                        _detailState.value = FavoriteDetailState.Success(response, tempUnit, windUnit)
+                    }
             } catch (e: Exception) {
                 _detailState.value = FavoriteDetailState.Error(e.message ?: "Error loading forecast")
             }
@@ -128,3 +149,4 @@ class FavoritesViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+

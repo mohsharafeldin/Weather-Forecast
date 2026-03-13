@@ -8,14 +8,14 @@ import kotlinx.coroutines.flow.Flow
 
 interface IWeatherRepository {
 
-    suspend fun getForecast(
+    fun getForecast(
         lat: Double,
         lon: Double,
         units: String = "metric",
         lang: String = "en"
-    ): WeatherResponse
+    ): Flow<WeatherResponse>
 
-    suspend fun searchCity(query: String): List<GeocodingResult>
+    fun searchCity(query: String): Flow<List<GeocodingResult>>
 
     fun getAllFavorites(): Flow<List<FavoriteLocation>>
     suspend fun addFavorite(location: FavoriteLocation)
@@ -30,6 +30,5 @@ interface IWeatherRepository {
     suspend fun getActiveAlerts(currentTime: Long): List<WeatherAlert>
 
     suspend fun cacheForecast(response: WeatherResponse)
-    suspend fun getCachedForecast(): WeatherResponse?
+    fun getCachedForecast(): Flow<WeatherResponse?>
 }
-

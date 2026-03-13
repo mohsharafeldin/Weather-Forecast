@@ -41,74 +41,85 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isOnline by viewModel.isOnline.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        AnimatedVisibility(
-            visible = !isOnline,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFE53935))
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.WifiOff,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.you_are_offline),
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
         }
+    }
 
-        when (val state = uiState) {
-            is HomeUiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { scaffoldPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
+            AnimatedVisibility(
+                visible = !isOnline,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFE53935))
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator()
+                    Icon(
+                        imageVector = Icons.Default.WifiOff,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.you_are_offline),
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
-            is HomeUiState.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = stringResource(R.string.error_title),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = state.message, color = MaterialTheme.colorScheme.onSurface)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.fetchForecast() }) {
-                            Text(stringResource(R.string.retry))
+
+            when (val state = uiState) {
+                is HomeUiState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is HomeUiState.Error -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = stringResource(R.string.error_title),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(text = state.message, color = MaterialTheme.colorScheme.onSurface)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = { viewModel.fetchForecast() }) {
+                                Text(stringResource(R.string.retry))
+                            }
                         }
                     }
                 }
-            }
-            is HomeUiState.Success -> {
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = { viewModel.refreshForecast() },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    SharedWeatherContent(state, onDayClick)
+                is HomeUiState.Success -> {
+                    PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = { viewModel.refreshForecast() },
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        SharedWeatherContent(state, onDayClick)
+                    }
                 }
             }
         }

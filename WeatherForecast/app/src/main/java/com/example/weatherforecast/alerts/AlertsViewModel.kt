@@ -7,11 +7,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.weatherforecast.model.WeatherAlert
 import com.example.weatherforecast.repository.IWeatherRepository
 import com.example.weatherforecast.settings.SettingsDataStore
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+sealed class AlertsUiState {
+    object Loading : AlertsUiState()
+    data class Success(val alerts: List<WeatherAlert>) : AlertsUiState()
+    data class Error(val message: String) : AlertsUiState()
+}
 
 class AlertsViewModel(
     private val repository: IWeatherRepository,
@@ -19,8 +29,23 @@ class AlertsViewModel(
     private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
-    val alerts: StateFlow<List<WeatherAlert>> = repository.getAllAlerts()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _uiState = MutableStateFlow<AlertsUiState>(AlertsUiState.Loading)
+    val uiState: StateFlow<AlertsUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<String>()
+    val events: SharedFlow<String> = _events.asSharedFlow()
+
+    init {
+        viewModelScope.launch {
+            repository.getAllAlerts()
+                .catch { e ->
+                    _uiState.value = AlertsUiState.Error(e.message ?: "Failed to load alerts")
+                }
+                .collect { alerts ->
+                    _uiState.value = AlertsUiState.Success(alerts)
+                }
+        }
+    }
 
     fun addAlert(startTime: Long, endTime: Long, alertType: String, snoozeDuration: Int) {
         viewModelScope.launch {
@@ -38,6 +63,7 @@ class AlertsViewModel(
             val lon = settingsDataStore.mapLon.first()
             val savedAlert = alert.copy(id = generatedId)
             AlertScheduler.schedule(context, savedAlert, lat, lon)
+            _events.emit("Alert scheduled")
         }
     }
 
@@ -45,6 +71,7 @@ class AlertsViewModel(
         viewModelScope.launch {
             AlertScheduler.cancel(context, alert)
             repository.removeAlert(alert)
+            _events.emit("Alert removed")
         }
     }
 

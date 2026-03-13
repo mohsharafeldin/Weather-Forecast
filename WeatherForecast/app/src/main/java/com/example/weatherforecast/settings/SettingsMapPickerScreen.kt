@@ -31,120 +31,138 @@ fun SettingsMapPickerScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
-    val initialPosition = LatLng(uiState.mapLat, uiState.mapLon)
-
-    var selectedPosition by remember { mutableStateOf<LatLng?>(null) }
-    var resolvedCityName by remember { mutableStateOf("") }
-
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(initialPosition, 5f)
-    }
-
-    fun resolveLocationName(latLng: LatLng) {
-        try {
-            @Suppress("DEPRECATION")
-            val geocoder = Geocoder(context, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            resolvedCityName = if (!addresses.isNullOrEmpty()) {
-                val address = addresses[0]
-                address.locality
-                    ?: address.subAdminArea
-                    ?: address.adminArea
-                    ?: address.countryName
-                    ?: "Lat: ${"%.4f".format(latLng.latitude)}, Lon: ${"%.4f".format(latLng.longitude)}"
-            } else {
-                "Lat: ${"%.4f".format(latLng.latitude)}, Lon: ${"%.4f".format(latLng.longitude)}"
+    when (val state = uiState) {
+        is SettingsUiState.Loading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-        } catch (e: Exception) {
-            resolvedCityName =
-                "Lat: ${"%.4f".format(latLng.latitude)}, Lon: ${"%.4f".format(latLng.longitude)}"
         }
-    }
+        is SettingsUiState.Error -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 16.sp
+                )
+            }
+        }
+        is SettingsUiState.Success -> {
+            val initialPosition = LatLng(state.mapLat, state.mapLon)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Pick Location") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            var selectedPosition by remember { mutableStateOf<LatLng?>(null) }
+            var resolvedCityName by remember { mutableStateOf("") }
+
+            val cameraPositionState = rememberCameraPositionState {
+                position = CameraPosition.fromLatLngZoom(initialPosition, 5f)
+            }
+
+            fun resolveLocationName(latLng: LatLng) {
+                try {
+                    @Suppress("DEPRECATION")
+                    val geocoder = Geocoder(context, Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+                    resolvedCityName = if (!addresses.isNullOrEmpty()) {
+                        val address = addresses[0]
+                        address.locality
+                            ?: address.subAdminArea
+                            ?: address.adminArea
+                            ?: address.countryName
+                            ?: "Lat: ${"%.4f".format(latLng.latitude)}, Lon: ${"%.4f".format(latLng.longitude)}"
+                    } else {
+                        "Lat: ${"%.4f".format(latLng.latitude)}, Lon: ${"%.4f".format(latLng.longitude)}"
                     }
+                } catch (e: Exception) {
+                    resolvedCityName =
+                        "Lat: ${"%.4f".format(latLng.latitude)}, Lon: ${"%.4f".format(latLng.longitude)}"
                 }
-            )
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                onMapClick = { latLng ->
-                    selectedPosition = latLng
-                    resolveLocationName(latLng)
-                }
-            ) {
-                selectedPosition?.let { position ->
-                    Marker(
-                        state = MarkerState(position = position),
-                        title = resolvedCityName.ifBlank { "Selected Location" },
-                        snippet = "Lat: ${"%.4f".format(position.latitude)}, Lon: ${"%.4f".format(position.longitude)}"
+            }
+
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Pick Location") },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            }
+                        }
                     )
                 }
-            }
-
-            Card(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) { padding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
                 ) {
-                    if (selectedPosition == null) {
-                        Text(
-                            text = "Tap on the map to select a location",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                    } else {
-                        Text(
-                            text = resolvedCityName,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Lat: ${"%.4f".format(selectedPosition!!.latitude)}, Lon: ${"%.4f".format(selectedPosition!!.longitude)}",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
+                    GoogleMap(
+                        modifier = Modifier.fillMaxSize(),
+                        cameraPositionState = cameraPositionState,
+                        onMapClick = { latLng ->
+                            selectedPosition = latLng
+                            resolveLocationName(latLng)
+                        }
+                    ) {
+                        selectedPosition?.let { position ->
+                            Marker(
+                                state = MarkerState(position = position),
+                                title = resolvedCityName.ifBlank { "Selected Location" },
+                                snippet = "Lat: ${"%.4f".format(position.latitude)}, Lon: ${"%.4f".format(position.longitude)}"
+                            )
+                        }
                     }
 
-                    Button(
-                        onClick = {
-                            selectedPosition?.let { pos ->
-                                viewModel.setMapCoordinates(pos.latitude, pos.longitude)
-                                onBack()
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = selectedPosition != null
+                    Card(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Confirm Location", fontSize = 16.sp)
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            if (selectedPosition == null) {
+                                Text(
+                                    text = "Tap on the map to select a location",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            } else {
+                                Text(
+                                    text = resolvedCityName,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Lat: ${"%.4f".format(selectedPosition!!.latitude)}, Lon: ${"%.4f".format(selectedPosition!!.longitude)}",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+
+                            Button(
+                                onClick = {
+                                    selectedPosition?.let { pos ->
+                                        viewModel.setMapCoordinates(pos.latitude, pos.longitude)
+                                        onBack()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                enabled = selectedPosition != null
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Confirm Location", fontSize = 16.sp)
+                            }
+                        }
                     }
                 }
             }

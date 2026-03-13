@@ -49,7 +49,7 @@ class AlertReceiver : BroadcastReceiver() {
                 val remoteDataSource = WeatherRemoteDataSource(RetrofitClient.weatherApiService)
                 val repository = WeatherRepositoryImpl(remoteDataSource, localDataSource)
 
-                val cachedForecast = repository.getCachedForecast()
+                val cachedForecast = repository.getCachedForecast().first()
                 val current = cachedForecast?.list?.firstOrNull()
 
                 val weatherId = current?.weather?.firstOrNull()?.id ?: 0

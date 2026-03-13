@@ -3,28 +3,29 @@ package com.example.weatherforecast.datasource.remote
 import com.example.weatherforecast.model.GeocodingResult
 import com.example.weatherforecast.model.WeatherResponse
 import com.example.weatherforecast.network.WeatherApiService
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 
 class WeatherRemoteDataSource(
     private val apiService: WeatherApiService
 ) : IWeatherRemoteDataSource {
 
-    override suspend fun getForecast(
+    override fun getForecast(
         lat: Double,
         lon: Double,
         apiKey: String,
         units: String,
         lang: String
-    ): WeatherResponse {
-        return apiService.getForecast(lat, lon, apiKey, units, lang)
+    ): Flow<WeatherResponse> = flow {
+        emit(apiService.getForecast(lat, lon, apiKey, units, lang))
     }
 
-    override suspend fun searchCity(
+    override fun searchCity(
         query: String,
         apiKey: String,
         limit: Int
-    ): List<GeocodingResult> {
-        return apiService.searchCity(query, limit, apiKey)
+    ): Flow<List<GeocodingResult>> = flow {
+        emit(apiService.searchCity(query, limit, apiKey))
     }
 }
-

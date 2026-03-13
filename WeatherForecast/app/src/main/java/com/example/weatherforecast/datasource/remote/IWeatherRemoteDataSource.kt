@@ -2,21 +2,21 @@ package com.example.weatherforecast.datasource.remote
 
 import com.example.weatherforecast.model.GeocodingResult
 import com.example.weatherforecast.model.WeatherResponse
+import kotlinx.coroutines.flow.Flow
 
 
 interface IWeatherRemoteDataSource {
-    suspend fun getForecast(
+    fun getForecast(
         lat: Double,
         lon: Double,
         apiKey: String,
         units: String = "metric",
         lang: String = "en"
-    ): WeatherResponse
+    ): Flow<WeatherResponse>
 
-    suspend fun searchCity(
+    fun searchCity(
         query: String,
         apiKey: String,
         limit: Int = 5
-    ): List<GeocodingResult>
+    ): Flow<List<GeocodingResult>>
 }
-
