@@ -41,8 +41,8 @@ fun AlertsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.events.collect { message ->
-            snackbarHostState.showSnackbar(message)
+        viewModel.events.collect { messageId ->
+            snackbarHostState.showSnackbar(context.getString(messageId))
         }
     }
 
@@ -77,7 +77,7 @@ fun AlertsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.removeAlert(alert)
+                        alertToDelete?.let { viewModel.removeAlert(it) }
                         alertToDelete = null
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -230,8 +230,13 @@ private fun AlertItem(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
+                val alertTypeString = when (alert.alertType) {
+                    "ALARM" -> stringResource(R.string.alarm_option)
+                    "NOTIFICATION" -> stringResource(R.string.notification_option)
+                    else -> alert.alertType
+                }
                 Text(
-                    text = alert.alertType,
+                    text = alertTypeString,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -246,7 +251,7 @@ private fun AlertItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "From: ${dateFormat.format(Date(alert.startTime))}",
+                        text = stringResource(R.string.from_time, dateFormat.format(Date(alert.startTime))),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
@@ -261,7 +266,7 @@ private fun AlertItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "To: ${dateFormat.format(Date(alert.endTime))}",
+                        text = stringResource(R.string.to_time, dateFormat.format(Date(alert.endTime))),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )

@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.example.weatherforecast.R
+import java.util.UUID
 
 sealed class AlertsUiState {
     object Loading : AlertsUiState()
@@ -32,8 +34,8 @@ class AlertsViewModel(
     private val _uiState = MutableStateFlow<AlertsUiState>(AlertsUiState.Loading)
     val uiState: StateFlow<AlertsUiState> = _uiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<String>()
-    val events: SharedFlow<String> = _events.asSharedFlow()
+    private val _events = MutableSharedFlow<Int>()
+    val events: SharedFlow<Int> = _events.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -63,15 +65,15 @@ class AlertsViewModel(
             val lon = settingsDataStore.mapLon.first()
             val savedAlert = alert.copy(id = generatedId)
             AlertScheduler.schedule(context, savedAlert, lat, lon)
-            _events.emit("Alert scheduled")
+            _events.emit(R.string.msg_alert_scheduled)
         }
     }
 
     fun removeAlert(alert: WeatherAlert) {
         viewModelScope.launch {
-            AlertScheduler.cancel(context, alert)
             repository.removeAlert(alert)
-            _events.emit("Alert removed")
+            AlertScheduler.cancel(context, alert)
+            _events.emit(R.string.msg_alert_removed)
         }
     }
 

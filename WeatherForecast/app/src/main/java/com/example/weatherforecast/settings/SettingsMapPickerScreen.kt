@@ -11,9 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherforecast.R
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -80,7 +82,7 @@ fun SettingsMapPickerScreen(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("Pick Location") },
+                        title = { Text(stringResource(R.string.pick_location)) },
                         navigationIcon = {
                             IconButton(onClick = onBack) {
                                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -105,7 +107,7 @@ fun SettingsMapPickerScreen(
                         selectedPosition?.let { position ->
                             Marker(
                                 state = MarkerState(position = position),
-                                title = resolvedCityName.ifBlank { "Selected Location" },
+                                title = resolvedCityName.ifBlank { stringResource(R.string.selected_location) },
                                 snippet = "Lat: ${"%.4f".format(position.latitude)}, Lon: ${"%.4f".format(position.longitude)}"
                             )
                         }
@@ -128,7 +130,7 @@ fun SettingsMapPickerScreen(
                         ) {
                             if (selectedPosition == null) {
                                 Text(
-                                    text = "Tap on the map to select a location",
+                                    text = stringResource(R.string.error_select_location),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
@@ -150,7 +152,7 @@ fun SettingsMapPickerScreen(
                             Button(
                                 onClick = {
                                     selectedPosition?.let { pos ->
-                                        viewModel.setMapCoordinates(pos.latitude, pos.longitude)
+                                        viewModel.setMapCoordinates(pos.latitude, pos.longitude, resolvedCityName)
                                         onBack()
                                     }
                                 },
@@ -160,7 +162,7 @@ fun SettingsMapPickerScreen(
                             ) {
                                 Icon(Icons.Default.Check, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Confirm Location", fontSize = 16.sp)
+                                Text(stringResource(R.string.confirm_location), fontSize = 16.sp)
                             }
                         }
                     }

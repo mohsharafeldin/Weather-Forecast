@@ -30,10 +30,15 @@ fun FavoriteDetailScreen(
 ) {
     val detailState by viewModel.detailState.collectAsState()
 
+    val displayName = when (val state = detailState) {
+        is FavoriteDetailState.Success -> state.cityName.ifBlank { locationName }
+        else -> locationName
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(locationName) },
+                title = { Text(displayName) },
                 navigationIcon = {
                     IconButton(onClick = {
                         viewModel.resetDetailState()
@@ -64,14 +69,8 @@ fun FavoriteDetailScreen(
             }
             is FavoriteDetailState.Success -> {
                 val response = state.weatherResponse
-                val tempSymbol = when (state.tempUnit) {
-                    "metric" -> "°C"
-                    "imperial" -> "°F"
-                    else -> "K"
-                }
-
                 val current = response.list.firstOrNull() ?: return@Scaffold
-                val hourly = response.list.take(8)
+                val hourly = response.list.take(24)
                 val daily = response.list.groupBy { it.dtTxt.substring(0, 10) }
                     .map { (date, items) ->
                         com.example.weatherforecast.home.DailyForecast(

@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.example.weatherforecast.R
+import com.example.weatherforecast.settings.LocaleHelper
 
 class AlertReceiver : BroadcastReceiver() {
 
@@ -39,6 +40,7 @@ class AlertReceiver : BroadcastReceiver() {
                 val settingsDataStore = SettingsDataStore(context)
                 val tempUnit = settingsDataStore.temperatureUnit.first()
                 val lang = settingsDataStore.language.first()
+                val localizedContext = LocaleHelper.setLocale(context, lang)
 
                 val database = WeatherDatabase.getInstance(context)
                 val localDataSource = WeatherLocalDataSource(
@@ -60,43 +62,45 @@ class AlertReceiver : BroadcastReceiver() {
                 val alertMessages = mutableListOf<String>()
 
                 if (weatherId in 200..599) {
-                    alertMessages.add(context.getString(R.string.alert_rain, description))
+                    alertMessages.add(localizedContext.getString(R.string.alert_rain, description))
                 }
                 if (weatherId in 600..699) {
-                    alertMessages.add(context.getString(R.string.alert_snow, description))
+                    alertMessages.add(localizedContext.getString(R.string.alert_snow, description))
                 }
                 if (weatherId in 700..799) {
-                    alertMessages.add(context.getString(R.string.alert_fog, description))
+                    alertMessages.add(localizedContext.getString(R.string.alert_fog, description))
                 }
                 if (windSpeed > 10) {
-                    alertMessages.add(context.getString(R.string.alert_wind, "%.1f".format(windSpeed)))
+                    alertMessages.add(localizedContext.getString(R.string.alert_wind, com.example.weatherforecast.utils.formatLocal(windSpeed, 1)))
                 }
                 if (tempUnit == "metric" && temp < 0) {
-                    alertMessages.add(context.getString(R.string.alert_temp_low, temp.toInt()))
+                    alertMessages.add(localizedContext.getString(R.string.alert_temp_low, temp.toInt()))
                 }
                 if (tempUnit == "metric" && temp > 40) {
-                    alertMessages.add(context.getString(R.string.alert_temp_high, temp.toInt()))
+                    alertMessages.add(localizedContext.getString(R.string.alert_temp_high, temp.toInt()))
                 }
 
                 val message = if (alertMessages.isNotEmpty()) {
                     alertMessages.joinToString("\n")
                 } else {
-                    context.getString(R.string.alert_current_weather, description, temp.toInt())
+                    localizedContext.getString(R.string.alert_current_weather, description, temp.toInt())
                 }
 
                 if (alertType == "ALARM") {
                     AlarmSoundService.start(context, message, alertId)
                 } else {
                     val notificationId = System.currentTimeMillis().toInt()
-                    showNotification(context, message, notificationId, alertId)
+                    showNotification(context, localizedContext, message, notificationId, alertId)
                 }
             } catch (e: Exception) {
-                val fallbackMessage = context.getString(R.string.alert_fallback)
+                val lang = try { SettingsDataStore(context).language.first() } catch (_: Exception) { "en" }
+                val localizedContext = LocaleHelper.setLocale(context, lang)
+                val fallbackMessage = localizedContext.getString(R.string.alert_fallback)
                 if (alertType == "ALARM") {
                     AlarmSoundService.start(context, fallbackMessage, alertId)
                 } else {
                     val notificationId = System.currentTimeMillis().toInt()
-                    showNotification(context, fallbackMessage, notificationId, alertId)
+                    showNotification(context, localizedContext, fallbackMessage, notificationId, alertId)
                 }
             } finally {
                 pendingResult.finish()
@@ -104,8 +108,8 @@ class AlertReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun showNotification(context: Context, message: String, notificationId: Int, alertId: Int) {
-        createNotificationChannel(context)
+    private fun showNotification(context: Context, localizedContext: Context, message: String, notificationId: Int, alertId: Int) {
+        createNotificationChannel(context, localizedContext)
         
         val dismissIntent = Intent(context, StopAlarmReceiver::class.java).apply {
             putExtra("notification_id", notificationId)
@@ -131,27 +135,27 @@ class AlertReceiver : BroadcastReceiver() {
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(context.getString(R.string.weather_alert))
+            .setContentTitle(localizedContext.getString(R.string.weather_alert))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                context.getString(R.string.snooze),
+                localizedContext.getString(R.string.snooze),
                 dismissPendingIntent
             )
             .addAction(
                 android.R.drawable.ic_menu_delete,
-                context.getString(R.string.stop),
+                localizedContext.getString(R.string.stop),
                 stopPendingIntent
             )
             .build()
         notificationManager.notify(notificationId, notification)
     }
 
-    private fun showNotificationWithSound(context: Context, message: String, notificationId: Int, alertId: Int) {
-        createNotificationChannel(context)
+    private fun showNotificationWithSound(context: Context, localizedContext: Context, message: String, notificationId: Int, alertId: Int) {
+        createNotificationChannel(context, localizedContext)
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         
         val dismissIntent = Intent(context, StopAlarmReceiver::class.java).apply {
@@ -178,7 +182,7 @@ class AlertReceiver : BroadcastReceiver() {
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle(context.getString(R.string.weather_alarm))
+            .setContentTitle(localizedContext.getString(R.string.weather_alarm))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -186,26 +190,26 @@ class AlertReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                context.getString(R.string.snooze),
+                localizedContext.getString(R.string.snooze),
                 dismissPendingIntent
             )
             .addAction(
                 android.R.drawable.ic_menu_delete,
-                context.getString(R.string.stop),
+                localizedContext.getString(R.string.stop),
                 stopPendingIntent
             )
             .build()
         notificationManager.notify(notificationId, notification)
     }
 
-    private fun createNotificationChannel(context: Context) {
+    private fun createNotificationChannel(context: Context, localizedContext: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Weather Alerts",
+                localizedContext.getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notifications for weather alerts"
+                description = localizedContext.getString(R.string.notification_channel_desc)
             }
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

@@ -15,6 +15,16 @@ import androidx.core.app.NotificationCompat
 import com.example.weatherforecast.R
 
 class AlarmSoundService : Service() {
+    override fun attachBaseContext(newBase: Context?) {
+        if (newBase != null) {
+            val prefs = newBase.getSharedPreferences("language_prefs", Context.MODE_PRIVATE)
+            val lang = prefs.getString("language", "en") ?: "en"
+            val context = com.example.weatherforecast.settings.LocaleHelper.setLocale(newBase, lang)
+            super.attachBaseContext(context)
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     companion object {
         const val CHANNEL_ID = "weather_alarm_channel"
@@ -45,10 +55,10 @@ class AlarmSoundService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Weather Alarm",
+                getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Persistent alarm for weather alerts"
+                description = getString(R.string.notification_channel_desc)
                 setSound(null, null)
             }
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

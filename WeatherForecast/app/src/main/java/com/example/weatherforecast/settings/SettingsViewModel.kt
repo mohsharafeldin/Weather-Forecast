@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import com.example.weatherforecast.R
 
 sealed class SettingsUiState {
     object Loading : SettingsUiState()
@@ -21,6 +22,7 @@ sealed class SettingsUiState {
         val locationMode: String = "gps",
         val mapLat: Double = 30.0444,
         val mapLon: Double = 31.2357,
+        val mapCityName: String = "",
         val themeMode: String = "system"
     ) : SettingsUiState()
     data class Error(val message: String) : SettingsUiState()
@@ -33,8 +35,8 @@ class SettingsViewModel(
     private val _uiState = MutableStateFlow<SettingsUiState>(SettingsUiState.Loading)
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<String>()
-    val events: SharedFlow<String> = _events.asSharedFlow()
+    private val _events = MutableSharedFlow<Int>()
+    val events: SharedFlow<Int> = _events.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -45,7 +47,8 @@ class SettingsViewModel(
                     settingsDataStore.language,
                     settingsDataStore.locationMode,
                     settingsDataStore.mapLat,
-                    settingsDataStore.mapLon
+                    settingsDataStore.mapLon,
+                    settingsDataStore.mapCityName
                 ) { values ->
                     SettingsUiState.Success(
                         temperatureUnit = values[0] as String,
@@ -54,6 +57,7 @@ class SettingsViewModel(
                         locationMode = values[3] as String,
                         mapLat = values[4] as Double,
                         mapLon = values[5] as Double,
+                        mapCityName = values[6] as String,
                         themeMode = (_uiState.value as? SettingsUiState.Success)?.themeMode ?: "system"
                     )
                 }.collect { state ->
@@ -76,42 +80,42 @@ class SettingsViewModel(
     fun setTemperatureUnit(unit: String) {
         viewModelScope.launch {
             settingsDataStore.setTemperatureUnit(unit)
-            _events.emit("Temperature unit updated")
+            _events.emit(R.string.msg_temp_updated)
         }
     }
 
     fun setWindSpeedUnit(unit: String) {
         viewModelScope.launch {
             settingsDataStore.setWindSpeedUnit(unit)
-            _events.emit("Wind speed unit updated")
+            _events.emit(R.string.msg_wind_updated)
         }
     }
 
     fun setLanguage(lang: String) {
         viewModelScope.launch {
             settingsDataStore.setLanguage(lang)
-            _events.emit("Language updated")
+            _events.emit(R.string.msg_lang_updated)
         }
     }
 
     fun setLocationMode(mode: String) {
         viewModelScope.launch {
             settingsDataStore.setLocationMode(mode)
-            _events.emit("Location mode updated")
+            _events.emit(R.string.msg_location_updated)
         }
     }
 
-    fun setMapCoordinates(lat: Double, lon: Double) {
+    fun setMapCoordinates(lat: Double, lon: Double, cityName: String = "") {
         viewModelScope.launch {
-            settingsDataStore.setMapCoordinates(lat, lon)
-            _events.emit("Map coordinates updated")
+            settingsDataStore.setMapCoordinates(lat, lon, cityName)
+            _events.emit(R.string.msg_map_updated)
         }
     }
 
     fun setThemeMode(mode: String) {
         viewModelScope.launch {
             settingsDataStore.setThemeMode(mode)
-            _events.emit("Theme updated")
+            _events.emit(R.string.msg_theme_updated)
         }
     }
 }

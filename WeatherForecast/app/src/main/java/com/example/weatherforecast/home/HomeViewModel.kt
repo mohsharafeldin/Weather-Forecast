@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.example.weatherforecast.R
 
 sealed class HomeUiState {
     object Loading : HomeUiState()
@@ -54,8 +55,8 @@ class HomeViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    private val _snackbarEvents = MutableSharedFlow<String>()
-    val snackbarEvents: SharedFlow<String> = _snackbarEvents.asSharedFlow()
+    private val _snackbarEvents = MutableSharedFlow<Int>()
+    val snackbarEvents: SharedFlow<Int> = _snackbarEvents.asSharedFlow()
 
     val isOnline: StateFlow<Boolean> = connectivityObserver.isOnline
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -124,7 +125,7 @@ class HomeViewModel(
                     val cached = repository.getCachedForecast().first()
                     if (cached != null) {
                         applyResponse(cached, tempUnit, windUnit)
-                        _snackbarEvents.emit("Offline: showing cached data")
+                        _snackbarEvents.emit(R.string.msg_offline_cached)
                     } else {
                         _uiState.value = HomeUiState.Error(e.message ?: "Unknown error occurred")
                     }
@@ -139,8 +140,11 @@ class HomeViewModel(
     }
 
     private fun applyResponse(response: WeatherResponse, tempUnit: String, windUnit: String) {
-        val current = response.list.first()
-        val hourly = response.list.take(8)
+        val interpolatedList = com.example.weatherforecast.utils.WeatherInterpolator.interpolateWeatherList(response.list)
+        val interpolatedResponse = response.copy(list = interpolatedList)
+
+        val current = interpolatedList.firstOrNull() ?: response.list.first()
+        val hourly = interpolatedList.take(24)
 
         val daily = response.list.groupBy { it.dtTxt.substring(0, 10) }
             .map { (date, items) ->
@@ -154,7 +158,7 @@ class HomeViewModel(
             }
 
         _uiState.value = HomeUiState.Success(
-            weatherResponse = response,
+            weatherResponse = interpolatedResponse,
             currentWeather = current,
             hourlyForecast = hourly,
             dailyForecast = daily,

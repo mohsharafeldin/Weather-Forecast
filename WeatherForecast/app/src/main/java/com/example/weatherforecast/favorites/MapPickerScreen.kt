@@ -17,9 +17,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherforecast.R
 import com.example.weatherforecast.model.GeocodingResult
 import com.example.weatherforecast.repository.IWeatherRepository
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -100,7 +102,7 @@ fun MapPickerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pick a Location") },
+                title = { Text(stringResource(R.string.pick_a_location)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -127,7 +129,7 @@ fun MapPickerScreen(
                 selectedPosition?.let { position ->
                     Marker(
                         state = MarkerState(position = position),
-                        title = resolvedCityName.ifBlank { "Selected Location" },
+                        title = resolvedCityName.ifBlank { stringResource(R.string.selected_location) },
                         snippet = "Lat: ${"%.4f".format(position.latitude)}, Lon: ${"%.4f".format(position.longitude)}"
                     )
                 }
@@ -142,7 +144,7 @@ fun MapPickerScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search for a city...") },
+                    placeholder = { Text(stringResource(R.string.search_city)) },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null)
                     },
@@ -184,7 +186,7 @@ fun MapPickerScreen(
                                 val displayName = buildString {
                                     append(result.name)
                                     if (!result.state.isNullOrBlank()) append(", ${result.state}")
-                                    append(", ${result.country}")
+                                    append(", ${Locale("", result.country).getDisplayCountry(Locale.getDefault())}")
                                 }
                                 ListItem(
                                     headlineContent = {
@@ -246,7 +248,7 @@ fun MapPickerScreen(
                 ) {
                     if (selectedPosition == null) {
                         Text(
-                            text = "Tap on the map or search for a city",
+                            text = stringResource(R.string.tap_on_map),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
@@ -277,8 +279,8 @@ fun MapPickerScreen(
                         onClick = {
                             val pos = selectedPosition
                             when {
-                                pos == null -> errorMessage = "Please tap on the map to select a location"
-                                resolvedCityName.isBlank() -> errorMessage = "Unable to resolve location name"
+                                pos == null -> errorMessage = context.getString(R.string.error_select_location)
+                                resolvedCityName.isBlank() -> errorMessage = context.getString(R.string.error_resolve_location)
                                 else -> onSave(resolvedCityName.trim(), pos.latitude, pos.longitude)
                             }
                         },
@@ -288,7 +290,7 @@ fun MapPickerScreen(
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Save Location", fontSize = 16.sp)
+                        Text(stringResource(R.string.save_location), fontSize = 16.sp)
                     }
                 }
             }

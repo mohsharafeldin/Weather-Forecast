@@ -65,6 +65,8 @@
     <string name="no_alerts_set">No weather alerts set</string>
     <string name="tap_to_add_alert">Tap + to add an alert</string>
     <string name="add_alert">Add Alert</string>
+    <string name="from_time">From: %1$s</string>
+    <string name="to_time">To: %1$s</string>
 
     <!-- Day Detail Screen -->
     <string name="day_detail_title">Day Details</string>
@@ -105,4 +107,43 @@
     <string name="alert_temp_high">🔥 Very high temperature: %1$d°C</string>
     <string name="alert_current_weather">Current weather: %1$s, %2$d°</string>
     <string name="alert_fallback">Weather alert triggered. Check the app for details.</string>
+
+    <!-- Measure Units -->
+    <string name="unit_celsius">°C</string>
+    <string name="unit_fahrenheit">°F</string>
+    <string name="unit_kelvin">K</string>
+    <string name="unit_meters_per_second">m/s</string>
+    <string name="unit_miles_per_hour">mph</string>
+    <string name="unit_km">km</string>
+    <string name="unit_hpa">hPa</string>
+
+    <!-- Map Picker -->
+    <string name="pick_location">Pick Location</string>
+    <string name="confirm_location">Confirm Location</string>
+    <string name="pick_a_location">Pick a Location</string>
+    <string name="search_city">Search for a city...</string>
+    <string name="save_location">Save Location</string>
+    <string name="tap_on_map">Tap on the map or search for a city</string>
+    <string name="error_select_location">Please tap on the map to select a location</string>
+    <string name="error_resolve_location">Unable to resolve location name</string>
+    <string name="selected_location">Selected Location</string>
+
+    <!-- Snackbars -->
+    <string name="msg_temp_updated">Temperature unit updated</string>
+    <string name="msg_wind_updated">Wind speed unit updated</string>
+    <string name="msg_lang_updated">Language updated</string>
+    <string name="msg_location_updated">Location mode updated</string>
+    <string name="msg_map_updated">Map coordinates updated</string>
+    <string name="msg_theme_updated">Theme updated</string>
+    <string name="msg_offline_cached">Offline: showing cached data</string>
+    <string name="msg_fav_added_offline">Favorite added (offline)</string>
+    <string name="msg_fav_added">Favorite added</string>
+    <string name="msg_fav_added_no_weather">Favorite added (without weather data)</string>
+    <string name="msg_fav_removed">Favorite removed</string>
+    <string name="msg_alert_scheduled">Alert scheduled</string>
+    <string name="msg_alert_removed">Alert removed</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Weather Alerts</string>
+    <string name="notification_channel_desc">Notifications for weather alerts</string>
 </resources>

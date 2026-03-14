@@ -29,8 +29,8 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.events.collect { message ->
-            snackbarHostState.showSnackbar(message)
+        viewModel.events.collect { messageId ->
+            snackbarHostState.showSnackbar(context.getString(messageId))
         }
     }
 
@@ -88,10 +88,18 @@ fun SettingsScreen(
 
                     if (settings.locationMode == "map") {
                         Spacer(modifier = Modifier.height(8.dp))
+                        
+                        val locationText = if (settings.mapCityName.isNotBlank()) {
+                            settings.mapCityName
+                        } else {
+                            "Lat: ${"%.4f".format(settings.mapLat)}, Lon: ${"%.4f".format(settings.mapLon)}"
+                        }
+                        
                         Text(
-                            text = "Lat: ${"%.4f".format(settings.mapLat)}, Lon: ${"%.4f".format(settings.mapLon)}",
+                            text = locationText,
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
                         )
                         Button(

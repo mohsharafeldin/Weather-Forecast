@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.TextUnit
 import com.example.weatherforecast.R
 import com.example.weatherforecast.model.WeatherItem
+import com.example.weatherforecast.utils.formatLocal
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,11 +43,12 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isOnline by viewModel.isOnline.collectAsState()
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.snackbarEvents.collect { message ->
-            snackbarHostState.showSnackbar(message)
+        viewModel.snackbarEvents.collect { messageId ->
+            snackbarHostState.showSnackbar(context.getString(messageId))
         }
     }
 
@@ -129,9 +132,9 @@ fun HomeScreen(
 @Composable
 fun SharedWeatherContent(state: HomeUiState.Success, onDayClick: (String) -> Unit = {}) {
     val tempSymbol = when (state.temperatureUnit) {
-        "metric" -> "°C"
-        "imperial" -> "°F"
-        else -> "K"
+        "metric" -> stringResource(R.string.unit_celsius)
+        "imperial" -> stringResource(R.string.unit_fahrenheit)
+        else -> stringResource(R.string.unit_kelvin)
     }
     val windUnitLabel = state.windSpeedUnit
 
@@ -224,7 +227,7 @@ private fun CurrentWeatherCard(state: HomeUiState.Success, tempSymbol: String) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = state.weatherResponse.city.name + ", " + state.weatherResponse.city.country,
+                    text = state.weatherResponse.city.name + ", " + java.util.Locale("", state.weatherResponse.city.country).getDisplayCountry(java.util.Locale.getDefault()),
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -251,7 +254,7 @@ private fun CurrentWeatherCard(state: HomeUiState.Success, tempSymbol: String) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${current.main.temp.toInt()}$tempSymbol",
+                    text = "${current.main.temp.toInt().formatLocal()}$tempSymbol",
                     fontSize = 64.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onPrimary
@@ -264,7 +267,7 @@ private fun CurrentWeatherCard(state: HomeUiState.Success, tempSymbol: String) {
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = stringResource(R.string.feels_like, "${current.main.feelsLike.toInt()}$tempSymbol"),
+                    text = stringResource(R.string.feels_like, "${current.main.feelsLike.toInt().formatLocal()}$tempSymbol"),
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
                 )
@@ -284,12 +287,12 @@ private fun CurrentWeatherCard(state: HomeUiState.Success, tempSymbol: String) {
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Min",
+                            text = stringResource(R.string.temp_min),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                         )
                         Text(
-                            text = "${current.main.tempMin.toInt()}$tempSymbol",
+                            text = "${current.main.tempMin.toInt().formatLocal()}$tempSymbol",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary
@@ -303,12 +306,12 @@ private fun CurrentWeatherCard(state: HomeUiState.Success, tempSymbol: String) {
                     )
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Max",
+                            text = stringResource(R.string.temp_max),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                         )
                         Text(
-                            text = "${current.main.tempMax.toInt()}$tempSymbol",
+                            text = "${current.main.tempMax.toInt().formatLocal()}$tempSymbol",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary
@@ -334,6 +337,7 @@ private fun WeatherDetailsGrid(state: HomeUiState.Success, windUnit: String) {
         current.wind.gust
     }
     val visibilityKm = current.visibility / 1000.0
+    val windUnitLocale = if (windUnit == "mph") stringResource(R.string.unit_miles_per_hour) else stringResource(R.string.unit_meters_per_second)
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -344,13 +348,13 @@ private fun WeatherDetailsGrid(state: HomeUiState.Success, windUnit: String) {
                 modifier = Modifier.weight(1f),
                 emoji = "💧",
                 label = stringResource(R.string.humidity),
-                value = "${current.main.humidity}%"
+                value = "${current.main.humidity.formatLocal()}%"
             )
             DetailCard(
                 modifier = Modifier.weight(1f),
                 emoji = "💨",
                 label = stringResource(R.string.wind),
-                value = "${"%.1f".format(windSpeed)} $windUnit"
+                value = "${windSpeed.formatLocal(1)} $windUnitLocale"
             )
         }
         Row(
@@ -361,13 +365,13 @@ private fun WeatherDetailsGrid(state: HomeUiState.Success, windUnit: String) {
                 modifier = Modifier.weight(1f),
                 emoji = "🌡️",
                 label = stringResource(R.string.pressure),
-                value = "${current.main.pressure} hPa"
+                value = "${current.main.pressure.formatLocal()} ${stringResource(R.string.unit_hpa)}"
             )
             DetailCard(
                 modifier = Modifier.weight(1f),
                 emoji = "☁️",
                 label = stringResource(R.string.clouds),
-                value = "${current.clouds.all}%"
+                value = "${current.clouds.all.formatLocal()}%"
             )
         }
         Row(
@@ -378,13 +382,13 @@ private fun WeatherDetailsGrid(state: HomeUiState.Success, windUnit: String) {
                 modifier = Modifier.weight(1f),
                 emoji = "👁️",
                 label = stringResource(R.string.visibility),
-                value = "${"%.1f".format(visibilityKm)} km"
+                value = "${visibilityKm.formatLocal(1)} ${stringResource(R.string.unit_km)}"
             )
             DetailCard(
                 modifier = Modifier.weight(1f),
                 emoji = "🌧️",
                 label = stringResource(R.string.rain_probability),
-                value = "${(current.pop * 100).toInt()}%"
+                value = "${(current.pop * 100).toInt().formatLocal()}%"
             )
         }
         Row(
@@ -395,13 +399,13 @@ private fun WeatherDetailsGrid(state: HomeUiState.Success, windUnit: String) {
                 modifier = Modifier.weight(1f),
                 emoji = "🌀",
                 label = stringResource(R.string.wind_gust),
-                value = "${"%.1f".format(windGust)} $windUnit"
+                value = "${windGust.formatLocal(1)} $windUnitLocale"
             )
             DetailCard(
                 modifier = Modifier.weight(1f),
                 emoji = "🧭",
                 label = stringResource(R.string.wind_direction),
-                value = "${current.wind.deg}°"
+                value = "${current.wind.deg.formatLocal()}°"
             )
         }
     }
@@ -541,7 +545,7 @@ private fun AtmosphereCard(state: HomeUiState.Success) {
                 Text(text = "🌊", fontSize = 28.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "${current.main.seaLevel} hPa",
+                    text = "${current.main.seaLevel.formatLocal()} ${stringResource(R.string.unit_hpa)}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -557,7 +561,7 @@ private fun AtmosphereCard(state: HomeUiState.Success) {
                 Text(text = "⛰️", fontSize = 28.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "${current.main.grndLevel} hPa",
+                    text = "${current.main.grndLevel.formatLocal()} ${stringResource(R.string.unit_hpa)}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -621,7 +625,7 @@ private fun HourlyForecastItem(item: WeatherItem, tempSymbol: String) {
             )
             
             Text(
-                text = "${item.main.temp.toInt()}$tempSymbol",
+                text = "${item.main.temp.toInt().formatLocal()}$tempSymbol",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -671,7 +675,7 @@ private fun DailyForecastItem(daily: DailyForecast, tempSymbol: String, onClick:
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "${daily.tempMax.toInt()}° / ${daily.tempMin.toInt()}$tempSymbol",
+                text = "${daily.tempMax.toInt().formatLocal()}° / ${daily.tempMin.toInt().formatLocal()}$tempSymbol",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

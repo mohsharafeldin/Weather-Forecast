@@ -14,10 +14,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.weatherforecast.R
 import com.example.weatherforecast.model.WeatherItem
 import com.example.weatherforecast.model.WeatherResponse
+import com.example.weatherforecast.utils.formatLocal
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,9 +34,9 @@ fun SharedDayDetailContent(
     val dayItems = weatherResponse.list.filter { it.dtTxt.startsWith(date) }
 
     val tempSymbol = when (tempUnit) {
-        "metric" -> "°C"
-        "imperial" -> "°F"
-        else -> "K"
+        "metric" -> stringResource(R.string.unit_celsius)
+        "imperial" -> stringResource(R.string.unit_fahrenheit)
+        else -> stringResource(R.string.unit_kelvin)
     }
 
     val formattedDate = try {
@@ -148,10 +148,10 @@ private fun DaySummaryCard(
             modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AsyncImage(
-                model = "https://openweathermap.org/img/wn/${mainWeather?.icon ?: "01d"}@4x.png",
-                contentDescription = mainWeather?.description,
-                modifier = Modifier.size(80.dp)
+            WeatherIcon(
+                iconCode = mainWeather?.icon,
+                fontSize = 72.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -180,8 +180,9 @@ private fun DaySummaryCard(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 val windDisplay = if (windUnit == "mph") avgWind * 2.237 else avgWind
-                SummaryItem(stringResource(R.string.wind), "${"%.1f".format(windDisplay)} $windUnit")
-                SummaryItem(stringResource(R.string.pressure), "$avgPressure hPa")
+                val windUnitLabel = if (windUnit == "mph") stringResource(R.string.unit_miles_per_hour) else stringResource(R.string.unit_meters_per_second)
+                SummaryItem(stringResource(R.string.wind), "${windDisplay.formatLocal(1)} $windUnitLabel")
+                SummaryItem(stringResource(R.string.pressure), "${avgPressure.formatLocal()} ${stringResource(R.string.unit_hpa)}")
             }
         }
     }
@@ -214,6 +215,7 @@ private fun HourlyDetailCard(
     val time = timeFormat.format(Date(item.dt * 1000))
     val weatherDesc = item.weather.firstOrNull()
     val windDisplay = if (windUnit == "mph") item.wind.speed * 2.237 else item.wind.speed
+    val windUnitLabel = if (windUnit == "mph") stringResource(R.string.unit_miles_per_hour) else stringResource(R.string.unit_meters_per_second)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -233,10 +235,10 @@ private fun HourlyDetailCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                AsyncImage(
-                    model = "https://openweathermap.org/img/wn/${weatherDesc?.icon ?: "01d"}@2x.png",
-                    contentDescription = weatherDesc?.description,
-                    modifier = Modifier.size(48.dp)
+                WeatherIcon(
+                    iconCode = weatherDesc?.icon,
+                    fontSize = 36.sp,
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
             }
 
@@ -244,7 +246,7 @@ private fun HourlyDetailCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${item.main.temp.toInt()}$tempSymbol",
+                    text = "${item.main.temp.toInt().formatLocal()}$tempSymbol",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -257,9 +259,9 @@ private fun HourlyDetailCard(
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                DetailChip(stringResource(R.string.humidity), "${item.main.humidity}%")
-                DetailChip(stringResource(R.string.wind), "${"%.1f".format(windDisplay)} $windUnit")
-                DetailChip(stringResource(R.string.rain_chance), "${(item.pop * 100).toInt()}%")
+                DetailChip(stringResource(R.string.humidity), "${item.main.humidity.formatLocal()}%")
+                DetailChip(stringResource(R.string.wind), "${windDisplay.formatLocal(1)} $windUnitLabel")
+                DetailChip(stringResource(R.string.rain_chance), "${(item.pop * 100).toInt().formatLocal()}%")
             }
         }
     }

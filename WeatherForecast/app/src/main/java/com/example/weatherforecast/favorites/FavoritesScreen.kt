@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherforecast.R
 import com.example.weatherforecast.model.FavoriteLocation
+import com.example.weatherforecast.utils.formatLocal
 
 
 @Composable
@@ -33,11 +35,12 @@ fun FavoritesScreen(
 ) {
     val favorites by viewModel.favorites.collectAsState()
     var locationToDelete by remember { mutableStateOf<FavoriteLocation?>(null) }
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.events.collect { message ->
-            snackbarHostState.showSnackbar(message)
+        viewModel.events.collect { messageId ->
+            snackbarHostState.showSnackbar(context.getString(messageId))
         }
     }
 
@@ -146,6 +149,8 @@ private fun FavoriteLocationItem(
 ) {
     var temp by remember { mutableStateOf<Double?>(null) }
     var description by remember { mutableStateOf<String?>(null) }
+    var iconCode by remember { mutableStateOf<String?>(null) }
+    var cityName by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(location.cachedResponseJson) {
         if (location.cachedResponseJson != null) {
@@ -155,6 +160,8 @@ private fun FavoriteLocationItem(
                 val current = response.list.firstOrNull()
                 temp = current?.main?.temp
                 description = current?.weather?.firstOrNull()?.description?.replaceFirstChar { it.uppercase() }
+                iconCode = current?.weather?.firstOrNull()?.icon
+                cityName = response.city.name
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -187,11 +194,9 @@ private fun FavoriteLocationItem(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(24.dp)
+                com.example.weatherforecast.home.WeatherIcon(
+                    iconCode = iconCode,
+                    fontSize = 24.sp
                 )
             }
             
@@ -199,7 +204,7 @@ private fun FavoriteLocationItem(
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = location.name,
+                    text = cityName ?: location.name,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -220,7 +225,7 @@ private fun FavoriteLocationItem(
             
             if (temp != null) {
                 Text(
-                    text = "${temp!!.toInt()}°",
+                    text = "${temp!!.toInt().formatLocal()}°",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.W400,
                     color = MaterialTheme.colorScheme.onSurface,

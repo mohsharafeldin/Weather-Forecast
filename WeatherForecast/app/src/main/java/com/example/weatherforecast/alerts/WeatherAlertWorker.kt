@@ -55,6 +55,8 @@ class WeatherAlertWorker(
             val current = forecast.list.firstOrNull() ?: return Result.success()
 
 
+            val localizedContext = com.example.weatherforecast.settings.LocaleHelper.setLocale(context, lang)
+
             val weatherId = current.weather.firstOrNull()?.id ?: 0
             val temp = current.main.temp
             val windSpeed = current.wind.speed
@@ -64,28 +66,31 @@ class WeatherAlertWorker(
 
 
             if (weatherId in 200..599) {
-                alertMessages.add(applicationContext.getString(R.string.alert_rain, description))
+                alertMessages.add(localizedContext.getString(R.string.alert_rain, description))
             }
 
             if (weatherId in 600..699) {
-                alertMessages.add(applicationContext.getString(R.string.alert_snow, description))
+                alertMessages.add(localizedContext.getString(R.string.alert_snow, description))
             }
 
             if (weatherId in 700..799) {
-                alertMessages.add(applicationContext.getString(R.string.alert_fog, description))
+                alertMessages.add(localizedContext.getString(R.string.alert_fog, description))
             }
 
             if (windSpeed > 10) {
-                alertMessages.add(applicationContext.getString(R.string.alert_wind, "%.1f".format(windSpeed)))
+                alertMessages.add(localizedContext.getString(R.string.alert_wind, com.example.weatherforecast.utils.formatLocal(windSpeed, 1)))
             }
 
             if (tempUnit == "metric" && temp < 0) {
-                alertMessages.add(applicationContext.getString(R.string.alert_temp_low, temp.toInt()))
+                alertMessages.add(localizedContext.getString(R.string.alert_temp_low, temp.toInt()))
             }
 
             if (tempUnit == "metric" && temp > 40) {
-                alertMessages.add(applicationContext.getString(R.string.alert_temp_high, temp.toInt()))
+                alertMessages.add(localizedContext.getString(R.string.alert_temp_high, temp.toInt()))
             }
+
+            val currentStr = localizedContext.getString(R.string.alert_current_weather, description, temp.toInt())
+            alertMessages.add(currentStr)
 
             if (alertMessages.isNotEmpty()) {
                 for (alert in activeAlerts) {
@@ -95,7 +100,7 @@ class WeatherAlertWorker(
                             AlarmSoundService.start(context, message, alert.id)
                         } else {
                             val notificationId = System.currentTimeMillis().toInt()
-                            showNotification(message, notificationId, alert.id)
+                            showNotification(message, notificationId, alert.id, localizedContext)
                         }
                     }
                 }
@@ -107,8 +112,8 @@ class WeatherAlertWorker(
         }
     }
 
-    private fun showNotification(message: String, notificationId: Int, alertId: Int) {
-        createNotificationChannel()
+    private fun showNotification(message: String, notificationId: Int, alertId: Int, localizedContext: Context) {
+        createNotificationChannel(localizedContext)
         val dismissIntent = android.content.Intent(context, StopAlarmReceiver::class.java).apply {
             putExtra("notification_id", notificationId)
             putExtra("alert_id", alertId)
@@ -129,30 +134,30 @@ class WeatherAlertWorker(
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(applicationContext.getString(R.string.weather_alert))
+            .setContentTitle(localizedContext.getString(R.string.weather_alert))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                applicationContext.getString(R.string.snooze),
+                localizedContext.getString(R.string.snooze),
                 dismissPendingIntent
             )
             .addAction(
                 android.R.drawable.ic_menu_delete,
-                applicationContext.getString(R.string.stop),
+                localizedContext.getString(R.string.stop),
                 stopPendingIntent
             )
             .build()
         notificationManager.notify(notificationId, notification)
     }
 
-    private fun showNotificationWithSound(message: String, notificationId: Int, alertId: Int) {
-        createNotificationChannel()
+    private fun showNotificationWithSound(message: String, notificationId: Int, alertId: Int, localizedContext: Context) {
+        createNotificationChannel(localizedContext)
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         
         val dismissIntent = android.content.Intent(context, StopAlarmReceiver::class.java).apply {
@@ -175,10 +180,10 @@ class WeatherAlertWorker(
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle(applicationContext.getString(R.string.weather_alarm))
+            .setContentTitle(localizedContext.getString(R.string.weather_alarm))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -186,26 +191,28 @@ class WeatherAlertWorker(
             .setAutoCancel(true)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                applicationContext.getString(R.string.snooze),
+                localizedContext.getString(R.string.snooze),
                 dismissPendingIntent
             )
             .addAction(
                 android.R.drawable.ic_menu_delete,
-                applicationContext.getString(R.string.stop),
+                localizedContext.getString(R.string.stop),
                 stopPendingIntent
             )
             .build()
         notificationManager.notify(notificationId, notification)
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannel(localizedContext: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = localizedContext.getString(R.string.notification_channel_name)
+            val descriptionText = localizedContext.getString(R.string.notification_channel_desc)
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Weather Alerts",
+                name,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notifications for weather alerts"
+                description = descriptionText
             }
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
