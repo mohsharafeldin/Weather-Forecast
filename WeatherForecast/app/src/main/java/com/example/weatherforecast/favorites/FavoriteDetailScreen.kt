@@ -19,6 +19,7 @@ import coil.compose.AsyncImage
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.weatherforecast.model.DailyForecast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +74,7 @@ fun FavoriteDetailScreen(
                 val hourly = response.list.take(24)
                 val daily = response.list.groupBy { it.dtTxt.substring(0, 10) }
                     .map { (date, items) ->
-                        com.example.weatherforecast.home.DailyForecast(
+                        DailyForecast(
                             date = date,
                             tempMin = items.minOf { it.main.tempMin },
                             tempMax = items.maxOf { it.main.tempMax },

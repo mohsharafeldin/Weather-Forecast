@@ -29,7 +29,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.TextUnit
 import com.example.weatherforecast.R
 import com.example.weatherforecast.model.WeatherItem
+import com.example.weatherforecast.model.DailyForecast
 import com.example.weatherforecast.utils.formatLocal
+import com.example.weatherforecast.utils.localizeDigits
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -235,14 +237,14 @@ private fun CurrentWeatherCard(state: HomeUiState.Success, tempSymbol: String) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = dateFormat.format(now),
+                    text = dateFormat.format(now).localizeDigits(),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                 )
                 Text(
-                    text = timeFormat.format(now),
-                    fontSize = 13.sp,
+                    text = timeFormat.format(now).localizeDigits(),
+                    fontSize = 18.sp,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                 )
                 Spacer(modifier = Modifier.height(20.dp))
@@ -489,7 +491,7 @@ private fun SunriseSunsetCard(state: HomeUiState.Success) {
                 Text(text = "🌅", fontSize = 32.sp)
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = utcFormat.format(sunriseDate),
+                    text = utcFormat.format(sunriseDate).localizeDigits(),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -505,7 +507,7 @@ private fun SunriseSunsetCard(state: HomeUiState.Success) {
                 Text(text = "🌇", fontSize = 32.sp)
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = utcFormat.format(sunsetDate),
+                    text = utcFormat.format(sunsetDate).localizeDigits(),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -591,7 +593,7 @@ private fun HourlyForecastRow(hourlyForecast: List<WeatherItem>, tempSymbol: Str
 @Composable
 private fun HourlyForecastItem(item: WeatherItem, tempSymbol: String) {
     val timeFormat = SimpleDateFormat("hh a", Locale.getDefault())
-    val time = timeFormat.format(Date(item.dt * 1000))
+    val time = timeFormat.format(Date(item.dt * 1000)).localizeDigits()
     val weatherDesc = item.weather.firstOrNull()
 
     Card(
@@ -613,7 +615,7 @@ private fun HourlyForecastItem(item: WeatherItem, tempSymbol: String) {
         ) {
             Text(
                 text = time,
-                fontSize = 13.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
@@ -689,9 +691,9 @@ private fun formatDailyDate(dateStr: String): String {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val outputFormat = SimpleDateFormat("EEE, MMM dd", Locale.getDefault())
         val date = inputFormat.parse(dateStr)
-        date?.let { outputFormat.format(it) } ?: dateStr
+        date?.let { outputFormat.format(it).localizeDigits() } ?: dateStr.localizeDigits()
     } catch (e: Exception) {
-        dateStr
+        dateStr.localizeDigits()
     }
 }
 

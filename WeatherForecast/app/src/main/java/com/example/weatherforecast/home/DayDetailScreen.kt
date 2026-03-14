@@ -18,6 +18,7 @@ import com.example.weatherforecast.R
 import com.example.weatherforecast.model.WeatherItem
 import com.example.weatherforecast.model.WeatherResponse
 import com.example.weatherforecast.utils.formatLocal
+import com.example.weatherforecast.utils.localizeDigits
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,9 +44,9 @@ fun SharedDayDetailContent(
         val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val outputFormat = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
         val parsed = inputFormat.parse(date)
-        parsed?.let { outputFormat.format(it) } ?: date
+        parsed?.let { outputFormat.format(it).localizeDigits() } ?: date.localizeDigits()
     } catch (e: Exception) {
-        date
+        date.localizeDigits()
     }
 
     Scaffold(
@@ -155,7 +156,7 @@ private fun DaySummaryCard(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "${avgTemp.toInt()}$tempSymbol",
+                text = "${avgTemp.toInt()}$tempSymbol".localizeDigits(),
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -171,8 +172,8 @@ private fun DaySummaryCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                SummaryItem(stringResource(R.string.min_max), "${minTemp.toInt()}° / ${maxTemp.toInt()}$tempSymbol")
-                SummaryItem(stringResource(R.string.humidity), "$avgHumidity%")
+                SummaryItem(stringResource(R.string.min_max), "${minTemp.toInt()}° / ${maxTemp.toInt()}$tempSymbol".localizeDigits())
+                SummaryItem(stringResource(R.string.humidity), "$avgHumidity%".localizeDigits())
             }
             Spacer(modifier = Modifier.height(12.dp))
             Row(
@@ -212,7 +213,7 @@ private fun HourlyDetailCard(
     windUnit: String
 ) {
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    val time = timeFormat.format(Date(item.dt * 1000))
+    val time = timeFormat.format(Date(item.dt * 1000)).localizeDigits()
     val weatherDesc = item.weather.firstOrNull()
     val windDisplay = if (windUnit == "mph") item.wind.speed * 2.237 else item.wind.speed
     val windUnitLabel = if (windUnit == "mph") stringResource(R.string.unit_miles_per_hour) else stringResource(R.string.unit_meters_per_second)

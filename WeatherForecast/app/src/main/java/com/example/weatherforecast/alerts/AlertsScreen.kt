@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherforecast.R
 import com.example.weatherforecast.model.WeatherAlert
+import com.example.weatherforecast.utils.localizeDigits
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -251,7 +252,7 @@ private fun AlertItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = stringResource(R.string.from_time, dateFormat.format(Date(alert.startTime))),
+                        text = stringResource(R.string.from_time, dateFormat.format(Date(alert.startTime)).localizeDigits()),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
@@ -266,7 +267,7 @@ private fun AlertItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = stringResource(R.string.to_time, dateFormat.format(Date(alert.endTime))),
+                        text = stringResource(R.string.to_time, dateFormat.format(Date(alert.endTime)).localizeDigits()),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )

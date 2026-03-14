@@ -40,26 +40,36 @@ class FavoritesViewModel(
     private val _events = MutableSharedFlow<Int>()
     val events: SharedFlow<Int> = _events.asSharedFlow()
 
+    private var refreshedForSettings: Pair<String, String>? = null
+
     init {
-        refreshAllFavorites()
+        viewModelScope.launch {
+            kotlinx.coroutines.flow.combine(
+                repository.allFavorites,
+                settingsDataStore.temperatureUnit,
+                settingsDataStore.language
+            ) { favs, tempUnit, lang ->
+                Triple(favs, tempUnit, lang)
+            }.collect { (favs, tempUnit, lang) ->
+                if (favs.isNotEmpty()) {
+                    val currentSettings = Pair(tempUnit, lang)
+                    if (refreshedForSettings != currentSettings) {
+                        refreshedForSettings = currentSettings
+                        for (location in favs) {
+                            try {
+                                val response = repository.getForecast(location.latitude, location.longitude, tempUnit, lang).first()
+                                val gson = com.google.gson.Gson()
+                                val updatedLocation = location.copy(cachedResponseJson = gson.toJson(response))
+                                repository.updateFavorite(updatedLocation)
+                            } catch (_: Exception) { }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun refreshAllFavorites() {
-        viewModelScope.launch {
-            try {
-                val tempUnit = settingsDataStore.temperatureUnit.first()
-                val lang = settingsDataStore.language.first()
-                val allFavorites = repository.allFavorites.value
-                for (location in allFavorites) {
-                    try {
-                        val response = repository.getForecast(location.latitude, location.longitude, tempUnit, lang).first()
-                        val gson = com.google.gson.Gson()
-                        val updatedLocation = location.copy(cachedResponseJson = gson.toJson(response))
-                        repository.updateFavorite(updatedLocation)
-                    } catch (_: Exception) { }
-                }
-            } catch (_: Exception) { }
-        }
     }
 
     fun addFavorite(name: String, lat: Double, lon: Double) {

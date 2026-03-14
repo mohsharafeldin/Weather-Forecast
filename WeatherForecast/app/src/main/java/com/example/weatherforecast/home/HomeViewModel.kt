@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.weatherforecast.model.WeatherItem
 import com.example.weatherforecast.model.WeatherResponse
+import com.example.weatherforecast.model.DailyForecast
 import com.example.weatherforecast.network.ConnectivityObserver
 import com.example.weatherforecast.repository.IWeatherRepository
 import com.example.weatherforecast.settings.SettingsDataStore
@@ -35,14 +36,7 @@ sealed class HomeUiState {
     data class Error(val message: String) : HomeUiState()
 }
 
-data class DailyForecast(
-    val date: String,
-    val tempMin: Double,
-    val tempMax: Double,
-    val icon: String,
-    val description: String
-)
-
+@Suppress("unused")
 class HomeViewModel(
     private val repository: IWeatherRepository,
     private val settingsDataStore: SettingsDataStore,

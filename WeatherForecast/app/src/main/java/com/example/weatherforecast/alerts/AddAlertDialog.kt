@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherforecast.R
+import com.example.weatherforecast.utils.localizeDigits
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -75,7 +76,7 @@ fun AddAlertDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(dateFormat.format(Date(startTime)))
+                    Text(dateFormat.format(Date(startTime)).localizeDigits())
                 }
 
                 Text(stringResource(R.string.end_time), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
@@ -104,7 +105,7 @@ fun AddAlertDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(dateFormat.format(Date(endTime)))
+                    Text(dateFormat.format(Date(endTime)).localizeDigits())
                 }
 
                 Text(stringResource(R.string.alert_type), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
@@ -134,7 +135,7 @@ fun AddAlertDialog(
                                 onClick = { snoozeDuration = duration }
                             )
                             Text(
-                                text = stringResource(R.string.duration_min, duration),
+                                text = stringResource(R.string.duration_min, duration).localizeDigits(),
                                 fontSize = 14.sp,
                                 maxLines = 1,
                                 softWrap = false
