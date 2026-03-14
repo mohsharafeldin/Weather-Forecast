@@ -32,8 +32,7 @@ class FavoritesViewModel(
     private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
-    val favorites: StateFlow<List<FavoriteLocation>> = repository.getAllFavorites()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val favorites: StateFlow<List<FavoriteLocation>> = repository.allFavorites
 
     private val _detailState = MutableStateFlow<FavoriteDetailState>(FavoriteDetailState.Idle)
     val detailState: StateFlow<FavoriteDetailState> = _detailState.asStateFlow()
@@ -50,7 +49,7 @@ class FavoritesViewModel(
             try {
                 val tempUnit = settingsDataStore.temperatureUnit.first()
                 val lang = settingsDataStore.language.first()
-                val allFavorites = repository.getAllFavorites().first()
+                val allFavorites = repository.allFavorites.value
                 for (location in allFavorites) {
                     try {
                         val response = repository.getForecast(location.latitude, location.longitude, tempUnit, lang).first()

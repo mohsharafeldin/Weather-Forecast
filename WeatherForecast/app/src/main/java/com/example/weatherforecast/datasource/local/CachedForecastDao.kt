@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.weatherforecast.model.CachedForecast
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CachedForecastDao {
@@ -13,7 +14,10 @@ interface CachedForecastDao {
     suspend fun insertForecast(forecast: CachedForecast)
 
     @Query("SELECT * FROM cached_forecast WHERE id = 1")
-    suspend fun getCachedForecast(): CachedForecast?
+    fun getCachedForecast(): Flow<CachedForecast?>
+
+    @Query("SELECT * FROM cached_forecast WHERE id = 1")
+    suspend fun getCachedForecastSync(): CachedForecast?
 
     @Query("DELETE FROM cached_forecast")
     suspend fun clearCache()

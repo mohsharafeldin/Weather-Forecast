@@ -8,8 +8,14 @@ import com.example.weatherforecast.model.FavoriteLocation
 import com.example.weatherforecast.model.WeatherAlert
 import com.example.weatherforecast.model.WeatherResponse
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 class WeatherRepositoryImpl(
     private val remoteDataSource: IWeatherRemoteDataSource,
@@ -21,6 +27,7 @@ class WeatherRepositoryImpl(
     }
 
     private val gson = Gson()
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun getForecast(
         lat: Double,
@@ -35,8 +42,12 @@ class WeatherRepositoryImpl(
         return remoteDataSource.searchCity(query, API_KEY)
     }
 
-    override fun getAllFavorites(): Flow<List<FavoriteLocation>> =
-        localDataSource.getAllFavorites()
+    override val allFavorites: StateFlow<List<FavoriteLocation>> =
+        localDataSource.getAllFavorites().stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     override suspend fun addFavorite(location: FavoriteLocation) =
         localDataSource.addFavorite(location)
@@ -50,8 +61,12 @@ class WeatherRepositoryImpl(
     override suspend fun getFavoriteById(id: Int): FavoriteLocation? =
         localDataSource.getFavoriteById(id)
 
-    override fun getAllAlerts(): Flow<List<WeatherAlert>> =
-        localDataSource.getAllAlerts()
+    override val allAlerts: StateFlow<List<WeatherAlert>> =
+        localDataSource.getAllAlerts().stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     override suspend fun addAlert(alert: WeatherAlert): Long =
         localDataSource.addAlert(alert)
@@ -74,8 +89,8 @@ class WeatherRepositoryImpl(
         localDataSource.cacheForecast(cached)
     }
 
-    override fun getCachedForecast(): Flow<WeatherResponse?> {
-        return localDataSource.getCachedForecast().map { cached ->
+    override val cachedForecast: StateFlow<WeatherResponse?> =
+        localDataSource.getCachedForecast().map { cached ->
             if (cached != null) {
                 try {
                     gson.fromJson(cached.responseJson, WeatherResponse::class.java)
@@ -85,6 +100,18 @@ class WeatherRepositoryImpl(
             } else {
                 null
             }
+        }.stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    override suspend fun getCachedForecastSync(): WeatherResponse? {
+        val cached = localDataSource.getCachedForecastSync() ?: return null
+        return try {
+            gson.fromJson(cached.responseJson, WeatherResponse::class.java)
+        } catch (e: Exception) {
+            null
         }
     }
 }

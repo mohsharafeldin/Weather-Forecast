@@ -39,7 +39,7 @@ class AlertsViewModel(
 
     init {
         viewModelScope.launch {
-            repository.getAllAlerts()
+            repository.allAlerts
                 .catch { e ->
                     _uiState.value = AlertsUiState.Error(e.message ?: "Failed to load alerts")
                 }

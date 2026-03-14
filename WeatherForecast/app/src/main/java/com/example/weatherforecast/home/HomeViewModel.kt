@@ -122,7 +122,7 @@ class HomeViewModel(
 
             repository.getForecast(lat, lon, tempUnit, lang)
                 .catch { e ->
-                    val cached = repository.getCachedForecast().first()
+                    val cached = repository.getCachedForecastSync()
                     if (cached != null) {
                         applyResponse(cached, tempUnit, windUnit)
                         _snackbarEvents.emit(R.string.msg_offline_cached)

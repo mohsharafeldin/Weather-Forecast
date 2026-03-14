@@ -24,4 +24,5 @@ interface IWeatherLocalDataSource {
 
     suspend fun cacheForecast(forecast: CachedForecast)
     fun getCachedForecast(): Flow<CachedForecast?>
+    suspend fun getCachedForecastSync(): CachedForecast?
 }

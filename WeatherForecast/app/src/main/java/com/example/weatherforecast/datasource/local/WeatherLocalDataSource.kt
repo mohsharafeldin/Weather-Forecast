@@ -48,7 +48,6 @@ class WeatherLocalDataSource(
     override suspend fun cacheForecast(forecast: CachedForecast) =
         cachedForecastDao.insertForecast(forecast)
 
-    override fun getCachedForecast(): Flow<CachedForecast?> = flow {
-        emit(cachedForecastDao.getCachedForecast())
-    }
+    override fun getCachedForecast(): Flow<CachedForecast?> = cachedForecastDao.getCachedForecast()
+    override suspend fun getCachedForecastSync(): CachedForecast? = cachedForecastDao.getCachedForecastSync()
 }

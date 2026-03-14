@@ -5,6 +5,7 @@ import com.example.weatherforecast.model.GeocodingResult
 import com.example.weatherforecast.model.WeatherAlert
 import com.example.weatherforecast.model.WeatherResponse
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface IWeatherRepository {
 
@@ -17,18 +18,19 @@ interface IWeatherRepository {
 
     fun searchCity(query: String): Flow<List<GeocodingResult>>
 
-    fun getAllFavorites(): Flow<List<FavoriteLocation>>
+    val allFavorites: StateFlow<List<FavoriteLocation>>
     suspend fun addFavorite(location: FavoriteLocation)
     suspend fun updateFavorite(location: FavoriteLocation)
     suspend fun removeFavorite(location: FavoriteLocation)
     suspend fun getFavoriteById(id: Int): FavoriteLocation?
 
-    fun getAllAlerts(): Flow<List<WeatherAlert>>
+    val allAlerts: StateFlow<List<WeatherAlert>>
     suspend fun addAlert(alert: WeatherAlert): Long
     suspend fun removeAlert(alert: WeatherAlert)
     suspend fun updateAlert(alert: WeatherAlert)
     suspend fun getActiveAlerts(currentTime: Long): List<WeatherAlert>
 
     suspend fun cacheForecast(response: WeatherResponse)
-    fun getCachedForecast(): Flow<WeatherResponse?>
+    val cachedForecast: StateFlow<WeatherResponse?>
+    suspend fun getCachedForecastSync(): WeatherResponse?
 }
