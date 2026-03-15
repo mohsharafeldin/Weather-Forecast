@@ -1,0 +1,150 @@
+<resources>
+    <string name="app_name">توقعات الطقس</string>
+
+    <!-- Bottom Nav -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_favorites">المفضلة</string>
+    <string name="nav_alerts">التنبيهات</string>
+    <string name="nav_settings">الإعدادات</string>
+
+    <!-- Home Screen -->
+    <string name="error_title">خطأ</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="hourly_forecast">توقعات الساعة</string>
+    <string name="five_day_forecast">توقعات 5 أيام</string>
+    <string name="feels_like">يشعر وكأنه %1$s</string>
+    <string name="humidity">الرطوبة</string>
+    <string name="wind">الرياح</string>
+    <string name="pressure">الضغط</string>
+    <string name="clouds">الغيوم</string>
+    <string name="visibility">الرؤية</string>
+    <string name="rain_probability">المطر</string>
+    <string name="wind_gust">هبات الرياح</string>
+    <string name="wind_direction">اتجاه الرياح</string>
+    <string name="sea_level_pressure">مستوى البحر</string>
+    <string name="ground_level_pressure">مستوى الأرض</string>
+    <string name="sunrise">شروق الشمس</string>
+    <string name="sunset">غروب الشمس</string>
+    <string name="temp_min">الأدنى</string>
+    <string name="temp_max">الأعلى</string>
+    <string name="weather_details">تفاصيل الطقس</string>
+    <string name="sun_moon">معلومات الشمس</string>
+    <string name="atmosphere">الغلاف الجوي</string>
+    <string name="you_are_offline">أنت غير متصل بالإنترنت</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="location_section">الموقع</string>
+    <string name="gps_option">GPS (الموقع الحالي)</string>
+    <string name="map_option">اختيار من الخريطة</string>
+    <string name="pick_on_map">اختر على الخريطة</string>
+    <string name="temperature_unit_section">وحدة الحرارة</string>
+    <string name="celsius_option">مئوية (°C)</string>
+    <string name="fahrenheit_option">فهرنهايت (°F)</string>
+    <string name="kelvin_option">كلفن (K)</string>
+    <string name="wind_speed_unit_section">وحدة سرعة الرياح</string>
+    <string name="meter_sec_option">متر/ثانية</string>
+    <string name="miles_hour_option">ميل/ساعة</string>
+    <string name="language_section">اللغة</string>
+    <string name="english_option">الإنجليزية</string>
+    <string name="arabic_option">العربية</string>
+
+    <string name="theme_section">مظهر التطبيق</string>
+    <string name="system_default_option">الوضع الافتراضي للنظام</string>
+    <string name="light_mode_option">الوضع الفاتح</string>
+    <string name="dark_mode_option">الوضع الداكن</string>
+
+    <!-- Favorites Screen -->
+    <string name="favorite_locations_title">المواقع المفضلة</string>
+    <string name="no_favorites_yet">لا توجد مواقع مفضلة بعد</string>
+    <string name="tap_to_add">اضغط + لإضافة موقع</string>
+    <string name="add_favorite">إضافة مفضلة</string>
+    <string name="delete">حذف</string>
+
+    <!-- Alerts Screen -->
+    <string name="weather_alerts_title">تنبيهات الطقس</string>
+    <string name="no_alerts_set">لا توجد تنبيهات طقس</string>
+    <string name="tap_to_add_alert">اضغط + لإضافة تنبيه</string>
+    <string name="add_alert">إضافة تنبيه</string>
+    <string name="from_time">من: %1$s</string>
+    <string name="to_time">إلى: %1$s</string>
+
+    <!-- Day Detail Screen -->
+    <string name="day_detail_title">تفاصيل اليوم</string>
+    <string name="temperature">الحرارة</string>
+    <string name="feels_like_label">الإحساس</string>
+    <string name="min_max">الأدنى / الأعلى</string>
+    <string name="visibility_label">الرؤية</string>
+    <string name="rain_chance">احتمال المطر</string>
+    <string name="back">رجوع</string>
+
+    <!-- Add Alert Dialog -->
+    <string name="start_time">وقت البدء</string>
+    <string name="end_time">وقت الانتهاء</string>
+    <string name="alert_type">نوع التنبيه</string>
+    <string name="notification_option">إشعار</string>
+    <string name="alarm_option">إنذار</string>
+    <string name="cancel">إلغاء</string>
+
+    <string name="confirm_delete_title">تأكيد الحذف</string>
+    <string name="confirm_delete_favorite_message">هل أنت متأكد أنك تريد إزالة هذا الموقع من المفضلة؟</string>
+    <string name="confirm_delete_alert_message">هل أنت متأكد أنك تريد حذف هذا التنبيه؟</string>
+    <string name="confirm">حذف</string>
+
+    <!-- Alert Strings, Validation & Notifications -->
+    <string name="snooze">غفوة</string>
+    <string name="stop">إيقاف</string>
+    <string name="snooze_duration">مدة الغفوة</string>
+    <string name="duration_min">%1$d دقيقة</string>
+    <string name="error_start_time_past">لا يمكن أن يكون وقت البدء في الماضي.</string>
+    <string name="error_end_time_before_start">يجب أن يكون وقت الانتهاء بعد وقت البدء.</string>
+    <string name="weather_alert">تنبيه الطقس</string>
+    <string name="weather_alarm">⚠️ إنذار الطقس!</string>
+    <string name="alert_rain">🌧️ أمطار/عاصفة متوقعة: %1$s</string>
+    <string name="alert_snow">❄️ ثلوج متوقعة: %1$s</string>
+    <string name="alert_fog">🌫️ ضباب ورؤية منخفضة: %1$s</string>
+    <string name="alert_wind">💨 سرعة الرياح العالية: %1$s م/ث</string>
+    <string name="alert_temp_low">🥶 درجة حرارة منخفضة جداً: %1$d°C</string>
+    <string name="alert_temp_high">🔥 درجة حرارة مرتفعة جداً: %1$d°C</string>
+    <string name="alert_current_weather">الطقس الحالي: %1$s، %2$d°</string>
+    <string name="alert_fallback">تم تشغيل تنبيه الطقس. تحقق من التطبيق لمعرفة التفاصيل.</string>
+
+    <!-- Measure Units -->
+    <string name="unit_celsius">°م</string>
+    <string name="unit_fahrenheit">°ف</string>
+    <string name="unit_kelvin">ك</string>
+    <string name="unit_meters_per_second">م/ث</string>
+    <string name="unit_miles_per_hour">ميل/س</string>
+    <string name="unit_km">كم</string>
+    <string name="unit_hpa">هيكتوباسكال</string>
+
+    <!-- Map Picker -->
+    <string name="pick_location">اختر الموقع</string>
+    <string name="confirm_location">تأكيد الموقع</string>
+    <string name="pick_a_location">اختر موقعاً</string>
+    <string name="search_city">ابحث عن مدينة...</string>
+    <string name="save_location">حفظ الموقع</string>
+    <string name="tap_on_map">اضغط على الخريطة أو ابحث عن مدينة</string>
+    <string name="error_select_location">الرجاء الضغط على الخريطة لاختيار موقع</string>
+    <string name="error_resolve_location">تعذر تحديد اسم الموقع</string>
+    <string name="selected_location">الموقع المحدد</string>
+
+    <!-- Snackbars -->
+    <string name="msg_temp_updated">تم تحديث وحدة الحرارة</string>
+    <string name="msg_wind_updated">تم تحديث وحدة سرعة الرياح</string>
+    <string name="msg_lang_updated">تم تحديث اللغة</string>
+    <string name="msg_location_updated">تم تحديث وضع الموقع</string>
+    <string name="msg_map_updated">تم تحديث إحداثيات الخريطة</string>
+    <string name="msg_theme_updated">تم تحديث المظهر</string>
+    <string name="msg_offline_cached">أنت غير متصل: عرض البيانات المخزنة</string>
+    <string name="msg_fav_added_offline">تمت إضافة المفضلة (بدون اتصال)</string>
+    <string name="msg_fav_added">تمت إضافة المفضلة</string>
+    <string name="msg_fav_added_no_weather">تمت إضافة المفضلة (بدون بيانات الطقس)</string>
+    <string name="msg_fav_removed">تمت إزالة المفضلة</string>
+    <string name="msg_alert_scheduled">تمت جدولة التنبيه</string>
+    <string name="msg_alert_removed">تمت إزالة التنبيه</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">تنبيهات الطقس</string>
+    <string name="notification_channel_desc">إشعارات تنبيهات الطقس</string>
+</resources>

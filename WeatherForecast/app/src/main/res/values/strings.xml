@@ -1,3 +1,149 @@
 <resources>
     <string name="app_name">Weather Forecast</string>
+
+    <!-- Bottom Nav -->
+    <string name="nav_home">Home</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_alerts">Alerts</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home Screen -->
+    <string name="error_title">Error</string>
+    <string name="retry">Retry</string>
+    <string name="hourly_forecast">Hourly Forecast</string>
+    <string name="five_day_forecast">5-Day Forecast</string>
+    <string name="feels_like">Feels like %1$s</string>
+    <string name="humidity">Humidity</string>
+    <string name="wind">Wind</string>
+    <string name="pressure">Pressure</string>
+    <string name="clouds">Clouds</string>
+    <string name="visibility">Visibility</string>
+    <string name="rain_probability">Rain</string>
+    <string name="wind_gust">Wind Gust</string>
+    <string name="wind_direction">Wind Dir</string>
+    <string name="sea_level_pressure">Sea Level</string>
+    <string name="ground_level_pressure">Ground Level</string>
+    <string name="sunrise">Sunrise</string>
+    <string name="sunset">Sunset</string>
+    <string name="temp_min">Min</string>
+    <string name="temp_max">Max</string>
+    <string name="weather_details">Weather Details</string>
+    <string name="sun_moon">Sun Info</string>
+    <string name="atmosphere">Atmosphere</string>
+    <string name="you_are_offline">You are offline</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="location_section">Location</string>
+    <string name="gps_option">GPS (Current Location)</string>
+    <string name="map_option">Choose from Map</string>
+    <string name="pick_on_map">Pick on Map</string>
+    <string name="temperature_unit_section">Temperature Unit</string>
+    <string name="celsius_option">Celsius (°C)</string>
+    <string name="fahrenheit_option">Fahrenheit (°F)</string>
+    <string name="kelvin_option">Kelvin (K)</string>
+    <string name="wind_speed_unit_section">Wind Speed Unit</string>
+    <string name="meter_sec_option">Meter/Sec</string>
+    <string name="miles_hour_option">Miles/Hour</string>
+    <string name="language_section">Language</string>
+    <string name="english_option">English</string>
+    <string name="arabic_option">Arabic</string>
+    <string name="theme_section">App Theme</string>
+    <string name="system_default_option">System Default</string>
+    <string name="light_mode_option">Light Mode</string>
+    <string name="dark_mode_option">Dark Mode</string>
+
+    <!-- Favorites Screen -->
+    <string name="favorite_locations_title">Favorite Locations</string>
+    <string name="no_favorites_yet">No favorite locations yet</string>
+    <string name="tap_to_add">Tap + to add one</string>
+    <string name="add_favorite">Add Favorite</string>
+    <string name="delete">Delete</string>
+
+    <!-- Alerts Screen -->
+    <string name="weather_alerts_title">Weather Alerts</string>
+    <string name="no_alerts_set">No weather alerts set</string>
+    <string name="tap_to_add_alert">Tap + to add an alert</string>
+    <string name="add_alert">Add Alert</string>
+    <string name="from_time">From: %1$s</string>
+    <string name="to_time">To: %1$s</string>
+
+    <!-- Day Detail Screen -->
+    <string name="day_detail_title">Day Details</string>
+    <string name="temperature">Temperature</string>
+    <string name="feels_like_label">Feels Like</string>
+    <string name="min_max">Min / Max</string>
+    <string name="visibility_label">Visibility</string>
+    <string name="rain_chance">Rain Chance</string>
+    <string name="back">Back</string>
+
+    <!-- Add Alert Dialog -->
+    <string name="start_time">Start Time</string>
+    <string name="end_time">End Time</string>
+    <string name="alert_type">Alert Type</string>
+    <string name="notification_option">Notification</string>
+    <string name="alarm_option">Alarm Sound</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="confirm_delete_title">Confirm Delete</string>
+    <string name="confirm_delete_favorite_message">Are you sure you want to remove this location from favorites?</string>
+    <string name="confirm_delete_alert_message">Are you sure you want to delete this alert?</string>
+    <string name="confirm">Delete</string>
+
+    <!-- Alert Strings, Validation & Notifications -->
+    <string name="snooze">Snooze</string>
+    <string name="stop">Stop</string>
+    <string name="snooze_duration">Snooze Duration</string>
+    <string name="duration_min">%1$d min</string>
+    <string name="error_start_time_past">Start time cannot be in the past.</string>
+    <string name="error_end_time_before_start">End time must be after the start time.</string>
+    <string name="weather_alert">Weather Alert</string>
+    <string name="weather_alarm">⚠️ Weather Alarm!</string>
+    <string name="alert_rain">🌧️ Rain/Storm expected: %1$s</string>
+    <string name="alert_snow">❄️ Snow expected: %1$s</string>
+    <string name="alert_fog">🌫️ Low visibility: %1$s</string>
+    <string name="alert_wind">💨 High wind speed: %1$s m/s</string>
+    <string name="alert_temp_low">🥶 Very low temperature: %1$d°C</string>
+    <string name="alert_temp_high">🔥 Very high temperature: %1$d°C</string>
+    <string name="alert_current_weather">Current weather: %1$s, %2$d°</string>
+    <string name="alert_fallback">Weather alert triggered. Check the app for details.</string>
+
+    <!-- Measure Units -->
+    <string name="unit_celsius">°C</string>
+    <string name="unit_fahrenheit">°F</string>
+    <string name="unit_kelvin">K</string>
+    <string name="unit_meters_per_second">m/s</string>
+    <string name="unit_miles_per_hour">mph</string>
+    <string name="unit_km">km</string>
+    <string name="unit_hpa">hPa</string>
+
+    <!-- Map Picker -->
+    <string name="pick_location">Pick Location</string>
+    <string name="confirm_location">Confirm Location</string>
+    <string name="pick_a_location">Pick a Location</string>
+    <string name="search_city">Search for a city...</string>
+    <string name="save_location">Save Location</string>
+    <string name="tap_on_map">Tap on the map or search for a city</string>
+    <string name="error_select_location">Please tap on the map to select a location</string>
+    <string name="error_resolve_location">Unable to resolve location name</string>
+    <string name="selected_location">Selected Location</string>
+
+    <!-- Snackbars -->
+    <string name="msg_temp_updated">Temperature unit updated</string>
+    <string name="msg_wind_updated">Wind speed unit updated</string>
+    <string name="msg_lang_updated">Language updated</string>
+    <string name="msg_location_updated">Location mode updated</string>
+    <string name="msg_map_updated">Map coordinates updated</string>
+    <string name="msg_theme_updated">Theme updated</string>
+    <string name="msg_offline_cached">Offline: showing cached data</string>
+    <string name="msg_fav_added_offline">Favorite added (offline)</string>
+    <string name="msg_fav_added">Favorite added</string>
+    <string name="msg_fav_added_no_weather">Favorite added (without weather data)</string>
+    <string name="msg_fav_removed">Favorite removed</string>
+    <string name="msg_alert_scheduled">Alert scheduled</string>
+    <string name="msg_alert_removed">Alert removed</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Weather Alerts</string>
+    <string name="notification_channel_desc">Notifications for weather alerts</string>
 </resources>
