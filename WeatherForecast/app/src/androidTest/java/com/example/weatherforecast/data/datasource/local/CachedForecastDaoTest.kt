@@ -39,22 +39,22 @@ class CachedForecastDaoTest {
     }
 
     @Test
-    fun insertAndGetCachedForecast() = runTest {
+    fun insertForecast_validForecast_retrievesForecast() = runTest {
         val forecast = CachedForecast(
             id = 1,
             responseJson = """{"cod":"200"}""",
             lastUpdated = System.currentTimeMillis()
         )
+        
         dao.insertForecast(forecast)
 
         val result = dao.getCachedForecast().first()
-
         assertNotNull(result)
         assertEquals("""{"cod":"200"}""", result!!.responseJson)
     }
 
     @Test
-    fun getCachedForecastSync_returnsCachedData() = runTest {
+    fun getCachedForecastSync_existingData_returnsCachedData() = runTest {
         val forecast = CachedForecast(
             id = 1,
             responseJson = """{"cod":"200"}""",
@@ -69,18 +69,23 @@ class CachedForecastDaoTest {
     }
 
     @Test
-    fun getCachedForecastSync_returnsNullWhenEmpty() = runTest {
+    fun getCachedForecastSync_emptyDatabase_returnsNull() = runTest {
+        // Given (Implicit via Setup)
+        
+        // When
         val result = dao.getCachedForecastSync()
 
+        // Then
         assertNull(result)
     }
 
     @Test
-    fun insertForecast_replacesExisting() = runTest {
+    fun insertForecast_existingId_replacesExisting() = runTest {
         val first = CachedForecast(id = 1, responseJson = """{"v":1}""", lastUpdated = 1000L)
         val second = CachedForecast(id = 1, responseJson = """{"v":2}""", lastUpdated = 2000L)
 
         dao.insertForecast(first)
+        
         dao.insertForecast(second)
 
         val result = dao.getCachedForecastSync()
@@ -90,7 +95,7 @@ class CachedForecastDaoTest {
     }
 
     @Test
-    fun clearCache_removesAllData() = runTest {
+    fun clearCache_existingData_removesAllData() = runTest {
         val forecast = CachedForecast(
             id = 1,
             responseJson = """{"cod":"200"}""",
@@ -105,9 +110,13 @@ class CachedForecastDaoTest {
     }
 
     @Test
-    fun getCachedForecast_flowReturnsNullWhenEmpty() = runTest {
+    fun getCachedForecast_emptyDatabase_flowReturnsNull() = runTest {
+        // Given (Implicit via Setup)
+        
+        // When
         val result = dao.getCachedForecast().first()
 
+        // Then
         assertNull(result)
     }
 }

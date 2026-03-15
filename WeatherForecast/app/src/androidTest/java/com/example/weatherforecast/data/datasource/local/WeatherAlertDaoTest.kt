@@ -39,32 +39,33 @@ class WeatherAlertDaoTest {
     }
 
     @Test
-    fun insertAndGetAllAlerts() = runTest {
+    fun insert_validAlert_retrievesAllAlerts() = runTest {
         val alert = WeatherAlert(
             startTime = 1000L, endTime = 2000L,
             alertType = "NOTIFICATION", isEnabled = true, snoozeDuration = 5
         )
+        
         dao.insert(alert)
 
         val alerts = dao.getAllAlerts().first()
-
         assertEquals(1, alerts.size)
         assertEquals("NOTIFICATION", alerts[0].alertType)
     }
 
     @Test
-    fun insertReturnsGeneratedId() = runTest {
+    fun insert_validAlert_returnsGeneratedId() = runTest {
         val alert = WeatherAlert(
             startTime = 1000L, endTime = 2000L,
             alertType = "NOTIFICATION", isEnabled = true, snoozeDuration = 5
         )
+        
         val id = dao.insert(alert)
 
         assertTrue(id > 0)
     }
 
     @Test
-    fun deleteAlert() = runTest {
+    fun delete_existingAlert_removesFromDatabase() = runTest {
         val alert = WeatherAlert(
             startTime = 1000L, endTime = 2000L,
             alertType = "NOTIFICATION", isEnabled = true, snoozeDuration = 5
@@ -81,7 +82,7 @@ class WeatherAlertDaoTest {
     }
 
     @Test
-    fun updateAlert() = runTest {
+    fun update_updatedAlert_updatesInDatabase() = runTest {
         val alert = WeatherAlert(
             startTime = 1000L, endTime = 2000L,
             alertType = "NOTIFICATION", isEnabled = true, snoozeDuration = 5
@@ -90,6 +91,7 @@ class WeatherAlertDaoTest {
 
         val inserted = dao.getAlertById(id.toInt())!!
         val updated = inserted.copy(isEnabled = false)
+        
         dao.update(updated)
 
         val result = dao.getAlertById(id.toInt())
@@ -97,7 +99,7 @@ class WeatherAlertDaoTest {
     }
 
     @Test
-    fun getActiveAlerts_returnsOnlyActiveAndNotExpired() = runTest {
+    fun getActiveAlerts_mixedAlerts_returnsOnlyActiveAndNotExpired() = runTest {
         val activeAlert = WeatherAlert(
             startTime = 1000L, endTime = 3000L,
             alertType = "NOTIFICATION", isEnabled = true, snoozeDuration = 5
@@ -123,25 +125,28 @@ class WeatherAlertDaoTest {
     }
 
     @Test
-    fun getActiveAlerts_returnsEmptyWhenNoneActive() = runTest {
+    fun getActiveAlerts_noActiveAlerts_returnsEmpty() = runTest {
+        // Given
         val expiredAlert = WeatherAlert(
             startTime = 500L, endTime = 1000L,
             alertType = "NOTIFICATION", isEnabled = true, snoozeDuration = 5
         )
         dao.insert(expiredAlert)
 
+        // When
         val result = dao.getActiveAlerts(1500L)
 
+        // Then
         assertTrue(result.isEmpty())
     }
 
     @Test
-    fun insertMultipleAlerts() = runTest {
+    fun insert_multipleAlerts_retrievesAll() = runTest {
         dao.insert(WeatherAlert(startTime = 1000L, endTime = 2000L, alertType = "NOTIFICATION"))
+        
         dao.insert(WeatherAlert(startTime = 3000L, endTime = 4000L, alertType = "ALARM"))
 
         val alerts = dao.getAllAlerts().first()
-
         assertEquals(2, alerts.size)
     }
 }

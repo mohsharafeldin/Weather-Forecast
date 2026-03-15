@@ -54,7 +54,7 @@ class WeatherLocalDataSourceTest {
     }
 
     @Test
-    fun getAllFavorites_delegatesToDao() = runTest {
+    fun getAllFavorites_called_delegatesToDao() = runTest {
         every { favoriteLocationDao.getAllFavorites() } returns flowOf(listOf(testLocation))
 
         val result = localDataSource.getAllFavorites().first()
@@ -64,7 +64,7 @@ class WeatherLocalDataSourceTest {
     }
 
     @Test
-    fun addFavorite_delegatesToDao() = runTest {
+    fun addFavorite_validLocation_delegatesToDao() = runTest {
         coEvery { favoriteLocationDao.insert(any()) } just Runs
 
         localDataSource.addFavorite(testLocation)
@@ -73,25 +73,31 @@ class WeatherLocalDataSourceTest {
     }
 
     @Test
-    fun updateFavorite_delegatesToDao() = runTest {
+    fun updateFavorite_validLocation_delegatesToDao() = runTest {
+        // Given
         coEvery { favoriteLocationDao.update(any()) } just Runs
 
+        // When
         localDataSource.updateFavorite(testLocation)
 
+        // Then
         coVerify { favoriteLocationDao.update(testLocation) }
     }
 
     @Test
-    fun removeFavorite_delegatesToDao() = runTest {
+    fun removeFavorite_validLocation_delegatesToDao() = runTest {
+        // Given
         coEvery { favoriteLocationDao.delete(any()) } just Runs
 
+        // When
         localDataSource.removeFavorite(testLocation)
 
+        // Then
         coVerify { favoriteLocationDao.delete(testLocation) }
     }
 
     @Test
-    fun getFavoriteById_delegatesToDao() = runTest {
+    fun getFavoriteById_validId_delegatesToDao() = runTest {
         coEvery { favoriteLocationDao.getFavoriteById(1) } returns testLocation
 
         val result = localDataSource.getFavoriteById(1)
@@ -100,25 +106,31 @@ class WeatherLocalDataSourceTest {
     }
 
     @Test
-    fun getFavoriteById_returnsNullWhenNotFound() = runTest {
+    fun getFavoriteById_notFound_returnsNull() = runTest {
+        // Given
         coEvery { favoriteLocationDao.getFavoriteById(99) } returns null
 
+        // When
         val result = localDataSource.getFavoriteById(99)
 
+        // Then
         assertNull(result)
     }
 
     @Test
-    fun getAllAlerts_delegatesToDao() = runTest {
+    fun getAllAlerts_called_delegatesToDao() = runTest {
+        // Given
         every { weatherAlertDao.getAllAlerts() } returns flowOf(listOf(testAlert))
 
+        // When
         val result = localDataSource.getAllAlerts().first()
 
+        // Then
         assertEquals(1, result.size)
     }
 
     @Test
-    fun addAlert_delegatesToDao() = runTest {
+    fun addAlert_validAlert_delegatesToDao() = runTest {
         coEvery { weatherAlertDao.insert(any()) } returns 1L
 
         val result = localDataSource.addAlert(testAlert)
@@ -128,25 +140,31 @@ class WeatherLocalDataSourceTest {
     }
 
     @Test
-    fun removeAlert_delegatesToDao() = runTest {
+    fun removeAlert_validAlert_delegatesToDao() = runTest {
+        // Given
         coEvery { weatherAlertDao.delete(any()) } just Runs
 
+        // When
         localDataSource.removeAlert(testAlert)
 
+        // Then
         coVerify { weatherAlertDao.delete(testAlert) }
     }
 
     @Test
-    fun updateAlert_delegatesToDao() = runTest {
+    fun updateAlert_validAlert_delegatesToDao() = runTest {
+        // Given
         coEvery { weatherAlertDao.update(any()) } just Runs
 
+        // When
         localDataSource.updateAlert(testAlert)
 
+        // Then
         coVerify { weatherAlertDao.update(testAlert) }
     }
 
     @Test
-    fun getActiveAlerts_delegatesToDao() = runTest {
+    fun getActiveAlerts_validTime_delegatesToDao() = runTest {
         coEvery { weatherAlertDao.getActiveAlerts(any()) } returns listOf(testAlert)
 
         val result = localDataSource.getActiveAlerts(1500L)
@@ -156,29 +174,38 @@ class WeatherLocalDataSourceTest {
     }
 
     @Test
-    fun cacheForecast_delegatesToDao() = runTest {
+    fun cacheForecast_validForecast_delegatesToDao() = runTest {
+        // Given
         coEvery { cachedForecastDao.insertForecast(any()) } just Runs
 
+        // When
         localDataSource.cacheForecast(testCachedForecast)
 
+        // Then
         coVerify { cachedForecastDao.insertForecast(testCachedForecast) }
     }
 
     @Test
-    fun getCachedForecast_delegatesToDao() = runTest {
+    fun getCachedForecast_called_delegatesToDao() = runTest {
+        // Given
         every { cachedForecastDao.getCachedForecast() } returns flowOf(testCachedForecast)
 
+        // When
         val result = localDataSource.getCachedForecast().first()
 
+        // Then
         assertEquals(testCachedForecast, result)
     }
 
     @Test
-    fun getCachedForecastSync_delegatesToDao() = runTest {
+    fun getCachedForecastSync_called_delegatesToDao() = runTest {
+        // Given
         coEvery { cachedForecastDao.getCachedForecastSync() } returns testCachedForecast
 
+        // When
         val result = localDataSource.getCachedForecastSync()
 
+        // Then
         assertEquals(testCachedForecast, result)
     }
 }

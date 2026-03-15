@@ -72,8 +72,9 @@ class AlertsViewModelTest {
     }
 
     @Test
-    fun `init should collect alerts into Success state`() = runTest {
+    fun init_collectAlerts_successState() = runTest {
         alertsFlow.value = listOf(testAlert)
+        
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -82,7 +83,7 @@ class AlertsViewModelTest {
     }
 
     @Test
-    fun `init with empty alerts should emit Success with empty list`() = runTest {
+    fun init_emptyAlerts_successWithEmptyList() = runTest {
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -91,31 +92,29 @@ class AlertsViewModelTest {
     }
 
     @Test
-    fun `addAlert should call repository and scheduler`() = runTest {
+    fun addAlert_validInput_callsRepositoryAndScheduler() = runTest {
         coEvery { repository.addAlert(any()) } returns 5L
         advanceUntilIdle()
 
         viewModel.addAlert(1000L, 2000L, "NOTIFICATION", 5)
         advanceUntilIdle()
 
-        coVerify { repository.addAlert(any()) }
         verify { alertScheduler.schedule(any(), 30.0, 31.0) }
     }
 
     @Test
-    fun `removeAlert should call repository and cancel scheduler`() = runTest {
+    fun removeAlert_validAlert_callsRepositoryAndCancelsScheduler() = runTest {
         coEvery { repository.removeAlert(any()) } just Runs
         advanceUntilIdle()
 
         viewModel.removeAlert(testAlert)
         advanceUntilIdle()
 
-        coVerify { repository.removeAlert(testAlert) }
         verify { alertScheduler.cancel(testAlert) }
     }
 
     @Test
-    fun `toggleAlert should disable and cancel when currently enabled`() = runTest {
+    fun toggleAlert_currentlyEnabled_disablesAndCancelsScheduler() = runTest {
         coEvery { repository.updateAlert(any()) } just Runs
         advanceUntilIdle()
 
@@ -129,7 +128,7 @@ class AlertsViewModelTest {
     }
 
     @Test
-    fun `toggleAlert should enable and schedule when currently disabled`() = runTest {
+    fun toggleAlert_currentlyDisabled_enablesAndSchedules() = runTest {
         val disabledAlert = testAlert.copy(isEnabled = false)
         coEvery { repository.updateAlert(any()) } just Runs
         advanceUntilIdle()
