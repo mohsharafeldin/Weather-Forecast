@@ -88,7 +88,7 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `getForecast should delegate to remote data source with API key`() = runTest {
+    fun getForecast_validCoordinates_delegatesToRemoteDataSource() = runTest {
         every {
             remoteDataSource.getForecast(any(), any(), any(), any(), any())
         } returns flowOf(fakeResponse)
@@ -100,7 +100,7 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `searchCity should delegate to remote data source`() = runTest {
+    fun searchCity_validQuery_delegatesToRemoteDataSource() = runTest {
         val results = listOf(
             GeocodingResult(name = "Cairo", lat = 30.0, lon = 31.0, country = "EG")
         )
@@ -113,7 +113,7 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `addFavorite should delegate to local data source`() = runTest {
+    fun addFavorite_validLocation_delegatesToLocalDataSource() = runTest {
         coEvery { localDataSource.addFavorite(any()) } just Runs
 
         repository.addFavorite(testLocation)
@@ -122,16 +122,19 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `updateFavorite should delegate to local data source`() = runTest {
+    fun updateFavorite_validLocation_delegatesToLocalDataSource() = runTest {
+        // Given
         coEvery { localDataSource.updateFavorite(any()) } just Runs
 
+        // When
         repository.updateFavorite(testLocation)
 
+        // Then
         coVerify { localDataSource.updateFavorite(testLocation) }
     }
 
     @Test
-    fun `removeFavorite should delegate to local data source`() = runTest {
+    fun removeFavorite_validLocation_delegatesToLocalDataSource() = runTest {
         coEvery { localDataSource.removeFavorite(any()) } just Runs
 
         repository.removeFavorite(testLocation)
@@ -140,7 +143,7 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `getFavoriteById should delegate to local data source`() = runTest {
+    fun getFavoriteById_validId_delegatesToLocalDataSource() = runTest {
         coEvery { localDataSource.getFavoriteById(1) } returns testLocation
 
         val result = repository.getFavoriteById(1)
@@ -149,7 +152,7 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `addAlert should delegate to local data source`() = runTest {
+    fun addAlert_validAlert_delegatesToLocalDataSource() = runTest {
         coEvery { localDataSource.addAlert(any()) } returns 1L
 
         val result = repository.addAlert(testAlert)
@@ -159,35 +162,44 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `removeAlert should delegate to local data source`() = runTest {
+    fun removeAlert_validAlert_delegatesToLocalDataSource() = runTest {
+        // Given
         coEvery { localDataSource.removeAlert(any()) } just Runs
 
+        // When
         repository.removeAlert(testAlert)
 
+        // Then
         coVerify { localDataSource.removeAlert(testAlert) }
     }
 
     @Test
-    fun `updateAlert should delegate to local data source`() = runTest {
+    fun updateAlert_validAlert_delegatesToLocalDataSource() = runTest {
+        // Given
         coEvery { localDataSource.updateAlert(any()) } just Runs
 
+        // When
         repository.updateAlert(testAlert)
 
+        // Then
         coVerify { localDataSource.updateAlert(testAlert) }
     }
 
     @Test
-    fun `getActiveAlerts should delegate to local data source`() = runTest {
+    fun getActiveAlerts_validTime_delegatesToLocalDataSource() = runTest {
+        // Given
         coEvery { localDataSource.getActiveAlerts(any()) } returns listOf(testAlert)
 
+        // When
         val result = repository.getActiveAlerts(1500L)
 
+        // Then
         assertEquals(1, result.size)
         coVerify { localDataSource.getActiveAlerts(1500L) }
     }
 
     @Test
-    fun `cacheForecast should serialize and delegate to local`() = runTest {
+    fun cacheForecast_validResponse_serializesAndDelegatesToLocal() = runTest {
         val slot = slot<CachedForecast>()
         coEvery { localDataSource.cacheForecast(capture(slot)) } just Runs
 
@@ -199,7 +211,7 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `getCachedForecastSync should deserialize from local`() = runTest {
+    fun getCachedForecastSync_cachedDataExists_deserializesFromLocal() = runTest {
         val json = com.google.gson.Gson().toJson(fakeResponse)
         val cached = CachedForecast(id = 1, responseJson = json, lastUpdated = System.currentTimeMillis())
         coEvery { localDataSource.getCachedForecastSync() } returns cached
@@ -211,30 +223,35 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `getCachedForecastSync should return null when no cache`() = runTest {
+    fun getCachedForecastSync_noCacheExists_returnsNull() = runTest {
+        // Given
         coEvery { localDataSource.getCachedForecastSync() } returns null
 
+        // When
         val result = repository.getCachedForecastSync()
 
+        // Then
         assertNull(result)
     }
 
     @Test
-    fun `getCachedWeatherForFavorite should return null when no cached json`() = runTest {
+    fun getCachedWeatherForFavorite_noCachedJson_returnsNull() = runTest {
         val locationNoCached = testLocation.copy(cachedResponseJson = null)
 
         val result = repository.getCachedWeatherForFavorite(locationNoCached)
 
+        // Then
         assertNull(result)
     }
 
     @Test
-    fun `getCachedWeatherForFavorite should deserialize cached json`() = runTest {
+    fun getCachedWeatherForFavorite_cachedJsonExists_deserializesJson() = runTest {
         val json = com.google.gson.Gson().toJson(fakeResponse)
         val locationWithCache = testLocation.copy(cachedResponseJson = json)
 
         val result = repository.getCachedWeatherForFavorite(locationWithCache)
 
+        // Then
         assertNotNull(result)
         assertEquals("Cairo", result!!.city.name)
     }

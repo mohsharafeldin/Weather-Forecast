@@ -72,13 +72,14 @@ class FavoritesViewModelTest {
     }
 
     @Test
-    fun `favorites should reflect repository allFavorites`() = runTest {
+    fun favorites_observeRepository_reflectsAllFavorites() = runTest {
         advanceUntilIdle()
+        
         assertEquals(emptyList<FavoriteLocation>(), viewModel.favorites.value)
     }
 
     @Test
-    fun `removeFavorite should call repository`() = runTest {
+    fun removeFavorite_validLocation_callsRepository() = runTest {
         coEvery { favoritesRepository.removeFavorite(any()) } just Runs
         advanceUntilIdle()
 
@@ -89,7 +90,7 @@ class FavoritesViewModelTest {
     }
 
     @Test
-    fun `searchCity should populate searchResults`() = runTest {
+    fun searchCity_validQuery_populatesSearchResults() = runTest {
         val results = listOf(
             GeocodingResult(name = "Cairo", lat = 30.0, lon = 31.0, country = "EG")
         )
@@ -104,7 +105,7 @@ class FavoritesViewModelTest {
     }
 
     @Test
-    fun `searchCity with short query should clear results`() = runTest {
+    fun searchCity_shortQuery_clearsResults() = runTest {
         advanceUntilIdle()
 
         viewModel.searchCity("C")
@@ -114,7 +115,7 @@ class FavoritesViewModelTest {
     }
 
     @Test
-    fun `clearSearchResults should set empty list`() = runTest {
+    fun clearSearchResults_called_setsEmptyList() = runTest {
         val results = listOf(
             GeocodingResult(name = "Cairo", lat = 30.0, lon = 31.0, country = "EG")
         )
@@ -125,11 +126,12 @@ class FavoritesViewModelTest {
         advanceUntilIdle()
 
         viewModel.clearSearchResults()
+        
         assertEquals(emptyList<GeocodingResult>(), viewModel.searchResults.value)
     }
 
     @Test
-    fun `addFavorite should call favoritesRepository addFavorite`() = runTest {
+    fun addFavorite_validInput_callsFavoritesRepository() = runTest {
         coEvery { favoritesRepository.addFavorite(any()) } just Runs
         coEvery { favoritesRepository.cacheWeatherForFavorite(any(), any()) } just Runs
         every { forecastRepository.getForecast(any(), any(), any(), any()) } returns flowOf(mockk(relaxed = true))
@@ -142,7 +144,7 @@ class FavoritesViewModelTest {
     }
 
     @Test
-    fun `resetDetailState should set Idle`() = runTest {
+    fun resetDetailState_called_setsIdleState() = runTest {
         advanceUntilIdle()
 
         viewModel.resetDetailState()

@@ -96,13 +96,14 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `initial state should be Loading`() = runTest {
+    fun init_createViewModel_loadingState() = runTest {
         viewModel = HomeViewModel(repository, settingsDataStore, connectivityObserver)
+        
         assertEquals(HomeUiState.Loading, viewModel.uiState.value)
     }
 
     @Test
-    fun `fetchForecast should emit Success on successful response`() = runTest {
+    fun fetchForecast_successfulResponse_emitsSuccess() = runTest {
         every { repository.getForecast(any(), any(), any(), any()) } returns flowOf(fakeResponse)
         coEvery { repository.cacheForecast(any()) } returns Unit
 
@@ -116,7 +117,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `fetchForecast should use cached data when network fails`() = runTest {
+    fun fetchForecast_networkFails_usesCachedData() = runTest {
         every { repository.getForecast(any(), any(), any(), any()) } returns flowOf(fakeResponse)
         coEvery { repository.cacheForecast(any()) } returns Unit
         coEvery { repository.getCachedForecastSync() } returns fakeResponse
@@ -132,7 +133,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `fetchForecast should cache response on success`() = runTest {
+    fun fetchForecast_successfulResponse_cachesResponse() = runTest {
         every { repository.getForecast(any(), any(), any(), any()) } returns flowOf(fakeResponse)
         coEvery { repository.cacheForecast(any()) } returns Unit
 
@@ -146,7 +147,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `refreshForecast should toggle isRefreshing`() = runTest {
+    fun refreshForecast_called_togglesIsRefreshing() = runTest {
         every { repository.getForecast(any(), any(), any(), any()) } returns flowOf(fakeResponse)
         coEvery { repository.cacheForecast(any()) } returns Unit
 
@@ -163,7 +164,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `Success state should contain correct temperature unit`() = runTest {
+    fun fetchForecast_successfulResponse_successStateContainsCorrectTemperatureUnit() = runTest {
         every { repository.getForecast(any(), any(), any(), any()) } returns flowOf(fakeResponse)
         coEvery { repository.cacheForecast(any()) } returns Unit
 

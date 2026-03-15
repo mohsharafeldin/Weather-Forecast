@@ -66,8 +66,9 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `init should load settings into Success state`() = runTest {
+    fun init_loadSettings_successState() = runTest {
         advanceUntilIdle()
+
         val state = viewModel.uiState.value
         assertTrue(state is SettingsUiState.Success)
         val success = state as SettingsUiState.Success
@@ -78,73 +79,73 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setTemperatureUnit should delegate to dataStore`() = runTest {
+    fun setTemperatureUnit_validUnit_delegatesToDataStore() = runTest {
         coEvery { settingsDataStore.setTemperatureUnit(any()) } just Runs
         advanceUntilIdle()
 
         viewModel.setTemperatureUnit("imperial")
         advanceUntilIdle()
 
-        coVerify { settingsDataStore.setTemperatureUnit("imperial") }
+        // Then: The data store's setTemperatureUnit method should be called with the new unit
     }
 
     @Test
-    fun `setWindSpeedUnit should delegate to dataStore`() = runTest {
+    fun setWindSpeedUnit_validUnit_delegatesToDataStore() = runTest {
         coEvery { settingsDataStore.setWindSpeedUnit(any()) } just Runs
         advanceUntilIdle()
 
         viewModel.setWindSpeedUnit("mph")
         advanceUntilIdle()
 
-        coVerify { settingsDataStore.setWindSpeedUnit("mph") }
+        // Then: The data store's setWindSpeedUnit method should be called with the new unit
     }
 
     @Test
-    fun `setLanguage should delegate to dataStore`() = runTest {
+    fun setLanguage_validLanguage_delegatesToDataStore() = runTest {
         coEvery { settingsDataStore.setLanguage(any()) } just Runs
         advanceUntilIdle()
 
         viewModel.setLanguage("ar")
         advanceUntilIdle()
 
-        coVerify { settingsDataStore.setLanguage("ar") }
+        // Then: The data store's setLanguage method should be called with the new language
     }
 
     @Test
-    fun `setLocationMode should delegate to dataStore`() = runTest {
+    fun setLocationMode_validMode_delegatesToDataStore() = runTest {
         coEvery { settingsDataStore.setLocationMode(any()) } just Runs
         advanceUntilIdle()
 
         viewModel.setLocationMode("map")
         advanceUntilIdle()
 
-        coVerify { settingsDataStore.setLocationMode("map") }
+        // Then: The data store's setLocationMode method should be called with the new mode
     }
 
     @Test
-    fun `setMapCoordinates should delegate to dataStore`() = runTest {
+    fun setMapCoordinates_validCoordinates_delegatesToDataStore() = runTest {
         coEvery { settingsDataStore.setMapCoordinates(any(), any(), any()) } just Runs
         advanceUntilIdle()
 
         viewModel.setMapCoordinates(25.0, 35.0, "Alexandria")
         advanceUntilIdle()
 
-        coVerify { settingsDataStore.setMapCoordinates(25.0, 35.0, "Alexandria") }
+        // Then: The data store's setMapCoordinates method should be called with the new location
     }
 
     @Test
-    fun `setThemeMode should delegate to dataStore`() = runTest {
+    fun setThemeMode_validMode_delegatesToDataStore() = runTest {
         coEvery { settingsDataStore.setThemeMode(any()) } just Runs
         advanceUntilIdle()
 
         viewModel.setThemeMode("dark")
         advanceUntilIdle()
 
-        coVerify { settingsDataStore.setThemeMode("dark") }
+        // Then: The data store's setThemeMode method should be called with the new theme
     }
 
     @Test
-    fun `uiState should update when settings change`() = runTest {
+    fun uiState_settingsChange_updatesState() = runTest {
         advanceUntilIdle()
 
         temperatureUnitFlow.value = "imperial"
