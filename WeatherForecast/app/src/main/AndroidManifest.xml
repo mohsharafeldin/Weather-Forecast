@@ -40,11 +40,11 @@
         </activity>
 
         <receiver
-            android:name=".alerts.AlertReceiver"
+            android:name=".presentation.alerts.AlertReceiver"
             android:exported="false" />
 
         <receiver
-            android:name=".alerts.BootReceiver"
+            android:name=".presentation.alerts.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -54,11 +54,11 @@
         </receiver>
 
         <receiver
-            android:name=".alerts.StopAlarmReceiver"
+            android:name=".presentation.alerts.StopAlarmReceiver"
             android:exported="false" />
 
         <service
-            android:name=".alerts.AlarmSoundService"
+            android:name=".presentation.alerts.AlarmSoundService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
     </application>
