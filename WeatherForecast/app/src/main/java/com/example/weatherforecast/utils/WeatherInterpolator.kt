@@ -1,9 +1,9 @@
 package com.example.weatherforecast.utils
 
-import com.example.weatherforecast.model.WeatherItem
-import com.example.weatherforecast.model.MainData
-import com.example.weatherforecast.model.WindData
-import com.example.weatherforecast.model.CloudsData
+import com.example.weatherforecast.data.model.WeatherItem
+import com.example.weatherforecast.data.model.MainData
+import com.example.weatherforecast.data.model.WindData
+import com.example.weatherforecast.data.model.CloudsData
 
 object WeatherInterpolator {
 

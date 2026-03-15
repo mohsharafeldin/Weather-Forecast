@@ -23,35 +23,37 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.work.*
-import com.example.weatherforecast.alerts.AlertsScreen
-import com.example.weatherforecast.alerts.AlertsViewModel
-import com.example.weatherforecast.alerts.AlertsViewModelFactory
-import com.example.weatherforecast.alerts.WeatherAlertWorker
-import com.example.weatherforecast.datasource.local.WeatherLocalDataSource
-import com.example.weatherforecast.datasource.remote.WeatherRemoteDataSource
-import com.example.weatherforecast.db.WeatherDatabase
-import com.example.weatherforecast.favorites.FavoriteDetailScreen
-import com.example.weatherforecast.favorites.FavoritesScreen
-import com.example.weatherforecast.favorites.FavoritesViewModel
-import com.example.weatherforecast.favorites.FavoritesViewModelFactory
-import com.example.weatherforecast.favorites.MapPickerScreen
-import com.example.weatherforecast.home.DayDetailScreen
-import com.example.weatherforecast.home.HomeScreen
-import com.example.weatherforecast.splash.SplashScreen
-import com.example.weatherforecast.home.HomeViewModel
-import com.example.weatherforecast.home.HomeViewModelFactory
-import com.example.weatherforecast.navigation.BottomNavBar
-import com.example.weatherforecast.navigation.Screen
-import com.example.weatherforecast.network.ConnectivityObserver
-import com.example.weatherforecast.network.RetrofitClient
-import com.example.weatherforecast.repository.IWeatherRepository
-import com.example.weatherforecast.repository.WeatherRepositoryImpl
-import com.example.weatherforecast.settings.LocaleHelper
-import com.example.weatherforecast.settings.SettingsDataStore
-import com.example.weatherforecast.settings.SettingsScreen
-import com.example.weatherforecast.settings.SettingsViewModel
-import com.example.weatherforecast.settings.SettingsViewModelFactory
-import com.example.weatherforecast.settings.SettingsMapPickerScreen
+import com.example.weatherforecast.presentation.alerts.AlertScheduler
+import com.example.weatherforecast.presentation.alerts.AlertsScreen
+import com.example.weatherforecast.presentation.alerts.AlertsViewModel
+import com.example.weatherforecast.presentation.alerts.AlertsViewModelFactory
+import com.example.weatherforecast.presentation.alerts.WeatherAlertWorker
+import com.example.weatherforecast.data.datasource.local.WeatherLocalDataSource
+import com.example.weatherforecast.data.datasource.remote.WeatherRemoteDataSource
+import com.example.weatherforecast.data.db.WeatherDatabase
+import com.example.weatherforecast.presentation.favorites.FavoriteDayDetailScreen
+import com.example.weatherforecast.presentation.favorites.FavoriteDetailScreen
+import com.example.weatherforecast.presentation.favorites.FavoritesScreen
+import com.example.weatherforecast.presentation.favorites.FavoritesViewModel
+import com.example.weatherforecast.presentation.favorites.FavoritesViewModelFactory
+import com.example.weatherforecast.presentation.favorites.MapPickerScreen
+import com.example.weatherforecast.presentation.home.DayDetailScreen
+import com.example.weatherforecast.presentation.home.HomeScreen
+import com.example.weatherforecast.presentation.splash.SplashScreen
+import com.example.weatherforecast.presentation.home.HomeViewModel
+import com.example.weatherforecast.presentation.home.HomeViewModelFactory
+import com.example.weatherforecast.presentation.navigation.BottomNavBar
+import com.example.weatherforecast.presentation.navigation.Screen
+import com.example.weatherforecast.data.network.ConnectivityObserver
+import com.example.weatherforecast.data.network.RetrofitClient
+import com.example.weatherforecast.data.repository.IWeatherRepository
+import com.example.weatherforecast.data.repository.WeatherRepositoryImpl
+import com.example.weatherforecast.presentation.settings.LocaleHelper
+import com.example.weatherforecast.presentation.settings.SettingsDataStore
+import com.example.weatherforecast.presentation.settings.SettingsScreen
+import com.example.weatherforecast.presentation.settings.SettingsViewModel
+import com.example.weatherforecast.presentation.settings.SettingsViewModelFactory
+import com.example.weatherforecast.presentation.settings.SettingsMapPickerScreen
 import com.example.weatherforecast.ui.theme.TestWeatherForecastTheme
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.runBlocking
@@ -82,7 +84,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        settingsDataStore = SettingsDataStore(this)
+        settingsDataStore =
+            SettingsDataStore(
+                this
+            )
         val prefs = getSharedPreferences("language_prefs", Context.MODE_PRIVATE)
         val lang = prefs.getString("language", "en") ?: "en"
         LocaleHelper.setLocale(this, lang)
@@ -102,19 +107,41 @@ class MainActivity : ComponentActivity() {
         val connectivityObserver = ConnectivityObserver(this)
 
         homeViewModel = ViewModelProvider(
-            this, HomeViewModelFactory(repository, settingsDataStore, connectivityObserver)
+            this,
+            HomeViewModelFactory(
+                repository,
+                settingsDataStore,
+                connectivityObserver
+            )
         )[HomeViewModel::class.java]
 
         settingsViewModel = ViewModelProvider(
-            this, SettingsViewModelFactory(settingsDataStore)
+            this,
+            SettingsViewModelFactory(
+                settingsDataStore
+            )
         )[SettingsViewModel::class.java]
 
         favoritesViewModel = ViewModelProvider(
-            this, FavoritesViewModelFactory(repository, settingsDataStore)
+            this,
+            FavoritesViewModelFactory(
+                repository,
+                repository,
+                settingsDataStore
+            )
         )[FavoritesViewModel::class.java]
 
+        val alertScheduler =
+            AlertScheduler(
+                applicationContext
+            )
         alertsViewModel = ViewModelProvider(
-            this, AlertsViewModelFactory(repository, applicationContext, settingsDataStore)
+            this,
+            AlertsViewModelFactory(
+                repository,
+                alertScheduler,
+                settingsDataStore
+            )
         )[AlertsViewModel::class.java]
 
 
@@ -203,7 +230,7 @@ class MainActivity : ComponentActivity() {
 
                         composable(Screen.MapPicker.route) {
                             MapPickerScreen(
-                                repository = repository,
+                                viewModel = favoritesViewModel,
                                 onSave = { name, lat, lon ->
                                     favoritesViewModel.addFavorite(name, lat, lon)
                                     navController.popBackStack()
@@ -237,7 +264,7 @@ class MainActivity : ComponentActivity() {
                             )
                         ) { backStackEntry ->
                             val date = backStackEntry.arguments?.getString("date") ?: ""
-                            com.example.weatherforecast.favorites.FavoriteDayDetailScreen(
+                            FavoriteDayDetailScreen(
                                 date = date,
                                 viewModel = favoritesViewModel,
                                 onBack = { navController.popBackStack() }
