@@ -145,33 +145,6 @@ class MainActivity : ComponentActivity() {
         )[AlertsViewModel::class.java]
 
 
-        scheduleAlertWorker()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val notifPermissionLauncher = registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) { }
-            if (ContextCompat.checkSelfPermission(
-                    this, Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-
-
-        val locationPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { permissions ->
-            val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
-            val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-            if (fineGranted || coarseGranted) {
-                fetchLocationAndLoadForecast()
-            } else {
-
-                homeViewModel.fetchForecast()
-            }
-        }
 
         setContent {
             val themeMode by settingsDataStore.themeMode.collectAsState(initial = "system")
@@ -309,48 +282,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
-        if (hasLocationPermission()) {
-            fetchLocationAndLoadForecast()
-        } else {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        }
-    }
-
-    private fun hasLocationPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    this, Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun fetchLocationAndLoadForecast() {
-        if (!hasLocationPermission()) {
-            homeViewModel.fetchForecast()
-            return
-        }
-        try {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                if (location != null) {
-                    homeViewModel.fetchForecast(location.latitude, location.longitude)
-                } else {
-
-                    homeViewModel.fetchForecast()
-                }
-            }.addOnFailureListener {
-                homeViewModel.fetchForecast()
-            }
-        } catch (e: SecurityException) {
-            homeViewModel.fetchForecast()
-        }
+        scheduleAlertWorker()
     }
 
     private fun scheduleAlertWorker() {
