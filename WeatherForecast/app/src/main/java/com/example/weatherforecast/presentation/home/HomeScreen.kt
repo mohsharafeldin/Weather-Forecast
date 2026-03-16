@@ -32,6 +32,13 @@ import com.example.weatherforecast.utils.formatLocal
 import com.example.weatherforecast.utils.localizeDigits
 import java.text.SimpleDateFormat
 import java.util.*
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,6 +56,73 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.snackbarEvents.collect { messageId ->
             snackbarHostState.showSnackbar(context.getString(messageId))
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (fineGranted || coarseGranted) {
+            try {
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        viewModel.fetchForecast(location.latitude, location.longitude)
+                    } else {
+                        viewModel.fetchForecast()
+                    }
+                }.addOnFailureListener {
+                    viewModel.fetchForecast()
+                }
+            } catch (e: SecurityException) {
+                viewModel.fetchForecast()
+            }
+        } else {
+            viewModel.fetchForecast()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (viewModel.uiState.value is HomeUiState.Loading) {
+            val permissionsToRequest = mutableListOf<String>()
+            val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            
+            if (!hasFine && !hasCoarse) {
+                permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
+                permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+            }
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+
+            if (permissionsToRequest.isNotEmpty()) {
+                permissionLauncher.launch(permissionsToRequest.toTypedArray())
+            } else {
+                if (hasFine || hasCoarse) {
+                    try {
+                        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                            if (location != null) {
+                                viewModel.fetchForecast(location.latitude, location.longitude)
+                            } else {
+                                viewModel.fetchForecast()
+                            }
+                        }.addOnFailureListener {
+                            viewModel.fetchForecast()
+                        }
+                    } catch (e: SecurityException) {
+                        viewModel.fetchForecast()
+                    }
+                } else {
+                    viewModel.fetchForecast()
+                }
+            }
         }
     }
 
