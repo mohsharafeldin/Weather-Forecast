@@ -147,4 +147,9 @@
     <!-- Notifications -->
     <string name="notification_channel_name">تنبيهات الطقس</string>
     <string name="notification_channel_desc">إشعارات تنبيهات الطقس</string>
+
+    <!-- Location Services -->
+    <string name="location_disabled_title">خدمات الموقع معطلة</string>
+    <string name="location_disabled_message">يرجى تفعيل خدمات الموقع للحصول على الطقس لموقعك الحالي.</string>
+    <string name="location_disabled_open_settings">فتح الإعدادات</string>
 </resources>

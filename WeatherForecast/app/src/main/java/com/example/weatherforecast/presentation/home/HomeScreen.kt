@@ -33,12 +33,23 @@ import com.example.weatherforecast.utils.localizeDigits
 import java.text.SimpleDateFormat
 import java.util.*
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +63,14 @@ fun HomeScreen(
     val isOnline by viewModel.isOnline.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    var showLocationDialog by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    fun isLocationEnabled(): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
 
     LaunchedEffect(Unit) {
         viewModel.snackbarEvents.collect { messageId ->
@@ -65,23 +84,61 @@ fun HomeScreen(
         val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (fineGranted || coarseGranted) {
-            try {
-                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        viewModel.fetchForecast(location.latitude, location.longitude)
-                    } else {
+            if (!isLocationEnabled()) {
+                showLocationDialog = true
+            } else {
+                try {
+                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        if (location != null) {
+                            viewModel.fetchForecast(location.latitude, location.longitude)
+                        } else {
+                            viewModel.fetchForecast()
+                        }
+                    }.addOnFailureListener {
                         viewModel.fetchForecast()
                     }
-                }.addOnFailureListener {
+                } catch (e: SecurityException) {
                     viewModel.fetchForecast()
                 }
-            } catch (e: SecurityException) {
-                viewModel.fetchForecast()
             }
         } else {
             viewModel.fetchForecast()
         }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && showLocationDialog) {
+                if (isLocationEnabled()) {
+                    showLocationDialog = false
+                    val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    if (hasFine || hasCoarse) {
+                        try {
+                            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                            val cancellationTokenSource = CancellationTokenSource()
+                            fusedLocationClient.getCurrentLocation(
+                                Priority.PRIORITY_HIGH_ACCURACY,
+                                cancellationTokenSource.token
+                            ).addOnSuccessListener { location ->
+                                if (location != null) {
+                                    viewModel.fetchForecast(location.latitude, location.longitude)
+                                } else {
+                                    viewModel.fetchForecast()
+                                }
+                            }.addOnFailureListener {
+                                viewModel.fetchForecast()
+                            }
+                        } catch (e: SecurityException) {
+                            viewModel.fetchForecast()
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     LaunchedEffect(Unit) {
@@ -105,25 +162,56 @@ fun HomeScreen(
                 permissionLauncher.launch(permissionsToRequest.toTypedArray())
             } else {
                 if (hasFine || hasCoarse) {
-                    try {
-                        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                            if (location != null) {
-                                viewModel.fetchForecast(location.latitude, location.longitude)
-                            } else {
+                    if (!isLocationEnabled()) {
+                        showLocationDialog = true
+                    } else {
+                        try {
+                            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                                if (location != null) {
+                                    viewModel.fetchForecast(location.latitude, location.longitude)
+                                } else {
+                                    viewModel.fetchForecast()
+                                }
+                            }.addOnFailureListener {
                                 viewModel.fetchForecast()
                             }
-                        }.addOnFailureListener {
+                        } catch (e: SecurityException) {
                             viewModel.fetchForecast()
                         }
-                    } catch (e: SecurityException) {
-                        viewModel.fetchForecast()
                     }
                 } else {
                     viewModel.fetchForecast()
                 }
             }
         }
+    }
+
+    if (showLocationDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showLocationDialog = false
+                viewModel.fetchForecast()
+            },
+            title = { Text(stringResource(R.string.location_disabled_title)) },
+            text = { Text(stringResource(R.string.location_disabled_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }) {
+                    Text(stringResource(R.string.location_disabled_open_settings))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showLocationDialog = false
+                    viewModel.fetchForecast()
+                }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        )
     }
 
     Scaffold(
