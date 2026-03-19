@@ -146,4 +146,9 @@
     <!-- Notifications -->
     <string name="notification_channel_name">Weather Alerts</string>
     <string name="notification_channel_desc">Notifications for weather alerts</string>
+
+    <!-- Location Services -->
+    <string name="location_disabled_title">Location Services Disabled</string>
+    <string name="location_disabled_message">Please enable location services to get weather for your current location.</string>
+    <string name="location_disabled_open_settings">Open Settings</string>
 </resources>
