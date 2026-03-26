@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.example.weatherforecast.R
 import com.example.weatherforecast.presentation.settings.LocaleHelper
 import com.example.weatherforecast.utils.formatLocal
@@ -87,21 +88,25 @@ class AlertReceiver : BroadcastReceiver() {
                     localizedContext.getString(R.string.alert_current_weather, description, temp.toInt())
                 }
 
-                if (alertType == "ALARM") {
-                    AlarmSoundService.start(context, message, alertId)
-                } else {
-                    val notificationId = System.currentTimeMillis().toInt()
-                    showNotification(context, localizedContext, message, notificationId, alertId)
+                withContext(Dispatchers.Main) {
+                    if (alertType == "ALARM") {
+                        AlarmSoundService.start(context, message, alertId)
+                    } else {
+                        val notificationId = System.currentTimeMillis().toInt()
+                        showNotification(context, localizedContext, message, notificationId, alertId)
+                    }
                 }
             } catch (e: Exception) {
                 val lang = try { SettingsDataStore(context).language.first() } catch (_: Exception) { "en" }
                 val localizedContext = LocaleHelper.setLocale(context, lang)
                 val fallbackMessage = localizedContext.getString(R.string.alert_fallback)
-                if (alertType == "ALARM") {
-                    AlarmSoundService.start(context, fallbackMessage, alertId)
-                } else {
-                    val notificationId = System.currentTimeMillis().toInt()
-                    showNotification(context, localizedContext, fallbackMessage, notificationId, alertId)
+                withContext(Dispatchers.Main) {
+                    if (alertType == "ALARM") {
+                        AlarmSoundService.start(context, fallbackMessage, alertId)
+                    } else {
+                        val notificationId = System.currentTimeMillis().toInt()
+                        showNotification(context, localizedContext, fallbackMessage, notificationId, alertId)
+                    }
                 }
             } finally {
                 pendingResult.finish()
